@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(ego-browser nodejs)",
+      "Exec(mkdir)",
+      "Exec(test)",
+      "Exec(python3)",
+      "Exec(uv run)",
+      "Exec(himalaya envelope list)",
+      "Exec(himalaya message read)",
+      "Exec(sips)",
+      "Exec(<HOME>/.seedmux/bin/smx-team)",
+      "Exec(<HOME>/.seedmux/bin/smx-team send)",
+      "Exec(<HOME>/.seedmux/bin/smx-team msg)",
+      "Exec(<HOME>/.seedmux/bin/smx-team verify)"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+# himalaya 配置模板 · Gmail（IMAP 收 + SMTP 发）
+# 放置位置：macOS 默认 ~/Library/Application Support/himalaya/config.toml（也可用 -c 或 HIMALAYA_CONFIG 指定）
+# 替换 <你的Gmail地址> 和 <显示名>；密码不写明文，经 auth.cmd 从 macOS 钥匙串读取。
+#
+# 准备应用专用密码（用户本人操作）：
+#   1. Google 账号开启两步验证
+#   2. 生成“应用专用密码”（16 位）
+#   3. 存入钥匙串（-w 后不带值会交互输入，不进 shell 历史）：
+#        security add-generic-password -s campus-apply-mail -a <你的Gmail地址> -w
+#   4. 验证：security find-generic-password -s campus-apply-mail -a <你的Gmail地址> -w >/dev/null && echo ok
+# 验证 himalaya：himalaya account doctor gmail && himalaya envelope list -s 5
+
+[accounts.gmail]
+default = true
+email = "<你的Gmail地址>"
+display-name = "<显示名>"
+
+backend.type = "imap"
+backend.host = "imap.gmail.com"
+backend.port = 993
+backend.login = "<你的Gmail地址>"
+backend.encryption.type = "tls"
+backend.auth.type = "password"
+backend.auth.cmd = "security find-generic-password -s campus-apply-mail -a <你的Gmail地址> -w"
+
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.gmail.com"
+message.send.backend.port = 465
+message.send.backend.login = "<你的Gmail地址>"
+message.send.backend.encryption.type = "tls"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.cmd = "security find-generic-password -s campus-apply-mail -a <你的Gmail地址> -w"
+
+# Gmail SMTP 会自动在“已发送”保存副本，这里关掉避免重复
+message.send.save-copy = false

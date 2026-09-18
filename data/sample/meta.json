@@ -1,0 +1,13 @@
+{
+ "synced_at": "2026-09-18T00:00:00+08:00",
+ "count": 12,
+ "companies": 12,
+ "sample": true,
+ "note": "虚构示例数据：公司、岗位、链接全部是编的，只用来把 scan → 看板这条链路跑通。真实公告按 adapters/sources/README.md 接你自己的数据源。",
+ "filter": {
+  "class_types": [
+   8
+  ],
+  "published_since": "2026-07-01"
+ }
+}

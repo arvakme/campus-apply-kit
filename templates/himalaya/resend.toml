@@ -1,0 +1,34 @@
+# himalaya 配置模板 · 自有域名发信走 Resend SMTP，收信走转发到的邮箱 IMAP
+# 适用：投递邮箱是自有域名（如 jobs@<你的域名>），域名已在 Resend 验证，收件转发到某个 IMAP 邮箱。
+# 放置位置：macOS 默认 ~/Library/Application Support/himalaya/config.toml
+# 密码不写明文，经 auth.cmd 从钥匙串读取：
+#   security add-generic-password -s campus-apply-resend -a resend -w        # 交互输入 Resend API key
+#   security add-generic-password -s campus-apply-mail -a <收件IMAP邮箱> -w   # 收件邮箱的应用专用密码
+# Resend 只当 SMTP 通道用，不调它的 HTTP API。免费额度与限流以 Resend 官网为准，intent.permissions.email.daily_limit 要低于额度。
+# 验证：himalaya account doctor jobs && 给自己发一封测试信
+
+[accounts.jobs]
+default = true
+email = "<jobs@你的域名>"
+display-name = "<显示名>"
+
+# 收信：转发目标邮箱的 IMAP（以 Gmail 为例）
+backend.type = "imap"
+backend.host = "imap.gmail.com"
+backend.port = 993
+backend.login = "<收件IMAP邮箱>"
+backend.encryption.type = "tls"
+backend.auth.type = "password"
+backend.auth.cmd = "security find-generic-password -s campus-apply-mail -a <收件IMAP邮箱> -w"
+
+# 发信：Resend SMTP，用户名固定为 resend，密码是 API key
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.resend.com"
+message.send.backend.port = 465
+message.send.backend.login = "resend"
+message.send.backend.encryption.type = "tls"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.cmd = "security find-generic-password -s campus-apply-resend -a resend -w"
+
+# Resend 不会写回 IMAP 已发送，需要留底时改为 true（会 APPEND 到收件邮箱的已发送文件夹）
+message.send.save-copy = false

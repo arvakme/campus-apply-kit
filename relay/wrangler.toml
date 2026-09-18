@@ -1,0 +1,38 @@
+# 共享 Telegram bot 中转（契约 docs/contracts.md §10）
+# 部署：wrangler deploy（本文件只配置，不在 CI/工单里执行 deploy）
+name = "campus-tg-relay"
+main = "src/index.ts"
+compatibility_date = "2026-09-10"
+# 只走自定义域名，关掉 workers.dev 与预览地址，减少暴露面
+workers_dev = false
+preview_urls = false
+
+# 生产路由：整个子域交给本 Worker（含 /tg/webhook 与 /v1/*）
+# custom_domain：部署时 Cloudflare 自动建 DNS 记录与证书，不用手动加解析
+routes = [
+  { pattern = "tg.example.com", custom_domain = true },   # ← 换成你自己在 Cloudflare 上的子域
+]
+
+# Telegram Bot API 前缀，测试时用 --var TG_API_BASE:http://127.0.0.1:PORT 覆盖成假 API
+[vars]
+TG_API_BASE = "https://api.telegram.org"
+# 维护者的 Telegram user_id（必填）：新配对要TA在私聊里点 [批准]/[拒绝]；
+# 留空则退回自动绑定（仅限本地 dev，生产必须配）
+MAINTAINER_USER_ID = ""
+# pair/init 每来源 IP 每小时上限（CF-Connecting-IP），防陌生人刷实例占存储
+PAIR_IP_RATE = "5"
+
+
+# secrets（wrangler secret put，不在此写值）：BOT_TOKEN / WEBHOOK_SECRET / ADMIN_KEY
+
+# 每日 21:00 北京时间 = UTC 13:00，排行榜私聊播报（契约 §10.3）
+[triggers]
+crons = ["0 13 * * *"]
+
+[[durable_objects.bindings]]
+name = "RELAY"
+class_name = "RelayDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RelayDO"]

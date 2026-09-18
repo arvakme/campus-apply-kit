@@ -1,0 +1,72 @@
+# intent.yaml 示例 · 27 届产品经理方向
+# 复制到 $CAMPUS_INSTANCE/intent.yaml 后按自己情况改。字段含义见 docs/contracts.md §2 与 docs/spec.md §4–§5。
+version: 1
+
+class_types: [8]                 # 数据源届数枚举：7=26届 8=27届 9=28届
+published_since: 2026-07-01
+
+targets: []                      # 心仪公司名（命中且非不合适 → 冲档）
+
+recall:                          # 宽召回：岗位片段命中任一词即入队（含 exclude 词的片段仍作废），
+  keywords:                      # 投不投由 judge.py 读 JD 后分档；写宽不写窄
+    - 产品
+    - 运营
+    - 管培
+    - 策划
+    - 项目管理
+    - 项目经理
+    - 数据分析
+    - 商业分析
+
+roles:
+  core:                          # 方向分 3
+    - 产品经理
+    - AI产品经理
+    - 产品策划
+    - 产品专员
+  ok:                            # 方向分 2
+    - 产品运营
+    - 用户运营
+    - 策略运营
+    - 项目管理
+    - 管培生
+    - 数据分析
+  exclude:                       # 硬排除大类（广撒网：只要公告有任何产品/运营类岗位就投；
+    - 算法                         #   只有岗位全部命中以下类别才判不合适）
+    - 硬件
+    - 芯片
+    - 销售
+    - 客服
+    - 柜员
+
+tiers: {大厂: 3, 名企: 2, 国企: 2, 外企: 2, 中小: 1}
+urgency: {le_7d: 2, le_14d: 1.5}
+
+cities:
+  prefer: [<填写城市1>, <填写城市2>]   # 顺序即优先级
+  avoid: []                      # 不想去的城市：公告城市全落这里 → 归练手档照投，不排除
+
+policies:
+  soe: report_only               # 国企产品岗较少，先汇报再决定
+  foreign_cv: en
+  attachments_required: hold
+  intern: true
+
+permissions:
+  submit:
+    default: user                # 起步阶段一律本人终审，熟悉后可改 worker
+    user_confirm_tiers: [大厂, 名企]
+    user_confirm_companies: []
+    practice: auto               # 练手档（不想去的城市/边缘岗位）默认不审核，worker 自检后直接提交；改成 user 才会停在提交前
+  register_accounts: user
+  captcha: user                  # 固定 user，不可改
+  email:
+    review: all
+    daily_limit: 50
+
+judgment_notes:
+  - 标题含“产品”但职责是销售、渠道拓展、客服的，按不合适处理
+  - “产品技术”“产品研发”类岗位多为开发岗，看 JD，要求写代码的排除
+  - “管培生”未明确产品或运营轮岗方向的归练手并记 risks，不判不合适
+  - 数据分析岗要求 SQL 以外的建模或算法能力的，排除
+  - 拿不准时对照简历看经历是否搭，仍模糊 blocked 问主持人

@@ -1,0 +1,90 @@
+# intent.yaml 示例 · 27 届 Agent 应用 / 后端开发方向
+# 复制到 $CAMPUS_INSTANCE/intent.yaml 后按自己情况改。字段含义见 docs/contracts.md §2 与 docs/spec.md §4–§5。
+version: 1
+
+class_types: [8]                 # 数据源届数枚举：7=26届 8=27届 9=28届
+published_since: 2026-07-01      # 只看此日期后发布的公告
+
+targets: []                      # 心仪公司名（命中且非不合适 → 冲档），如 [腾讯, 字节跳动, 小红书]
+
+recall:                          # 宽召回：岗位片段命中任一词即入队（含 exclude 词的片段仍作废），
+  keywords:                      # 投不投由 judge.py 读 JD 后分档；写宽不写窄
+    - 开发
+    - 技术
+    - 研发
+    - 软件
+    - 后端
+    - 服务端
+    - 前端
+    - 全栈
+    - Java
+    - Python
+    - Go
+    - Golang
+    - C++
+    - 测试开发
+    - 数据开发
+    - 管培
+    - 智能体
+    - Agent
+    - 大模型
+    - 信息技术
+    - 计算机
+
+roles:
+  core:                          # 方向分 3
+    - Agent应用开发
+    - Agent后端开发
+    - 大模型应用开发
+    - AI应用开发
+  ok:                            # 方向分 2
+    - 后端
+    - 服务端
+    - 软件工程师
+    - 软件开发
+    - 全栈
+    - Java开发
+    - Go开发
+  exclude:                       # 硬排除大类（广撒网：只要公告有任何开发类岗位就投；
+    - 算法                         #   只有岗位全部命中以下类别才判不合适）
+    - 研究员
+    - AI Infra
+    - 推理框架
+    - 训练框架
+    - 编译器
+    - 芯片
+    - 硬件
+    - 销售
+    - 柜员
+
+tiers: {大厂: 3, 名企: 2, 国企: 2, 外企: 2, 中小: 1}
+urgency: {le_7d: 2, le_14d: 1.5}
+
+cities:
+  prefer: [<填写城市1>, <填写城市2>]   # 顺序即优先级，表单多选时按此顺序
+  avoid: []                      # 不想去的城市：公告城市全落这里 → 归练手档照投，不排除
+
+policies:
+  soe: apply_all                 # apply_all | report_only | skip
+  foreign_cv: en                 # en | cn
+  attachments_required: hold     # hold（标待材料）| skip
+  intern: true
+
+permissions:
+  submit:
+    default: worker              # worker（自检后直接提交）| user（一律停在提交前）
+    user_confirm_tiers: [大厂]
+    user_confirm_companies: []   # 心仪公司写这里，最终提交本人点
+    practice: auto               # 练手档（不想去的城市/边缘岗位）默认不审核，worker 自检后直接提交；改成 user 才会停在提交前
+  register_accounts: user        # user | worker_email_only
+  captcha: user                  # 固定 user，不可改
+  email:
+    review: all                  # all | sample | none
+    daily_limit: 50              # 低于发信通道每日额度
+
+judgment_notes:
+  - 名字带 Agent 但职责是模型训练、评测、算法研究的，按算法岗排除
+  - 名字叫后端但实为芯片后端（P&R、EDA）的不投
+  - C/C++ 等技术栈不完全对口的软件开发岗可以投
+  - 只能选 avoid 城市或列表外城市时，选岗位所在城市并在留痕注明
+  - 拿不准时对照简历看经历是否搭，仍模糊 blocked 问主持人

@@ -1,0 +1,51 @@
+# notify.yaml 示例 · 复制到 $CAMPUS_INSTANCE/notify.yaml（不进 git）
+# 所有 agent 统一经 host/notify.py 发通知，不直接拼 Bark URL。格式见 docs/contracts.md §6。
+#
+# 默认用 Bark 公共服务器，不需要自建：iPhone 装 Bark App → 首页复制 device key → 填到下面。
+# 自建 bark-server 是维护者可选项（见 docs/setup-checklist.md 可选小节），不是前置条件。
+
+# 通知通道：按顺序都发，任一成功即算送达。telegram 是双向通道（能收按钮和回复），
+# bark 只推送。只想要一个就删掉另一个；全失败会写 state/notify.log。
+channels: [telegram, bark]
+
+# --- Telegram 双向 bot（设置步骤见 docs/telegram.md；共享中转见 docs/relay.md）---
+telegram:
+  # mode 二选一：
+  #   direct —— 自建 bot（公开版默认）：@BotFather 建一个 bot，token 存钥匙串，见 docs/telegram.md。
+  #   relay  —— 几个人共用一个 bot 时才需要：先按 docs/relay.md 自己部署 Worker，再跑
+  #            `uv run host/tgbot.py pair --nickname 你的名字` 拿 6 位配对码，
+  #            再到 Telegram 给共享 bot 发 /pair <码> 即完成绑定。
+  #            relay 段由 pair 自动写入，密钥存钥匙串 campus-apply-relay。
+  #   direct —— 自建 bot：token 存钥匙串，tgbot.py 直连 api.telegram.org 长轮询。
+  mode: direct
+  # relay 段示例（pair 自动写入，无需手填）：
+  # relay:
+  #   base: https://tg.example.com      # 你自己部署的 Worker 地址
+  #   instance_id: i-xxxxxxxx           # pair 生成
+  #   key_cmd: security find-generic-password -s campus-apply-relay -a i-xxxxxxxx -w
+  #   nickname: 阿伟                     # /rank 榜单显示名
+  #   rank: true                         # false = 不参与每日排行榜
+  #   chat_id: 123456789                 # 绑定成功自动回填
+  #   # poll_seconds: 2                  # 可选，run 轮询间隔
+  #   # confirm_high_risk: true          # 默认开：冲档 submit/mode auto/takeover 由 dispatcher 二次确认（§10.1）
+  #
+  # --- direct 模式字段（mode: direct 时才需要）---
+  # token 存钥匙串不落明文：security add-generic-password -s campus-apply-telegram -a bot -w <token>
+  bot_token_cmd: security find-generic-password -s campus-apply-telegram -w
+  allowed_chat_ids: [123456789]        # 只响应这些 chat；relay 模式配对后自动回填
+  proxy: http://127.0.0.1:6152         # 本机代理；launchd 环境没有代理变量，必须显式配
+  # api_base: http://127.0.0.1:1234    # 可选，只给测试用假 API 时覆盖
+
+# --- Bark ---
+bark_server: https://api.day.app          # 保持默认即可
+device_key: <Bark App 首页复制的 key>
+web_base: https://<机器名>.<tailnet>.ts.net  # 手机点通知后打开的前缀；tailscale serve 生成，需手机在同一 tailnet。relay 模式 pair 时上报给 Worker，作置顶「秋招面板」按钮与聊天菜单的前缀；改了跑 `tgbot.py pair --update-web-base`
+quiet_hours: ["00:30", "08:00"]           # 期间只发 handoff，其余攒到结束后
+
+events:
+  handoff:    {enabled: true, level: timeSensitive, sound: alarm}   # 扫码/验证码/人脸/终审提交
+  blocked:    {enabled: true, level: active}                        # worker 卡住等决策
+  batch-done: {enabled: true, level: passive}                       # 一批跑完
+  deadline:   {enabled: true, level: active}                        # 截止前一天
+  assessment: {enabled: true, level: timeSensitive}                 # 测评/笔试临近
+  review-wait: {enabled: true, level: timeSensitive, sound: alarm}  # 字段对照表待审（dispatcher 用）

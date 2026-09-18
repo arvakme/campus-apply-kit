@@ -1,0 +1,15 @@
+# container build 读 .dockerignore（不认 .containerignore）；
+# 注意 Apple container 1.0 的 builder 不支持 "* + !web/app/" 这种白名单写法（报 changes out of order），只能黑名单
+.git
+**/__pycache__
+**/*.pyc
+data
+docs
+portals
+templates
+adapters
+scripts
+host
+instance
+*.instance
+.env

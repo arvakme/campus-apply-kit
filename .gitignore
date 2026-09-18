@@ -1,0 +1,33 @@
+# 实例数据永远不进仓库
+instance/
+*.instance/
+accounts.md
+question-bank.yaml
+question-bank.md
+profile.md
+intent.yaml
+/resume/
+/state/
+/log/
+/mail/
+.env
+*.key
+*.pem
+.DS_Store
+__pycache__/
+*.pyc
+
+# 照片、证件等二进制敏感材料一律不进仓库
+*.jpg
+*.JPG
+*.jpeg
+*.png
+*.PNG
+*.heic
+*.HEIC
+*.pdf
+
+# 公告数据由你自己的数据源适配器写到本机，不进仓库（也避免和上游更新冲突）
+data/paperball/
+data/jd/
+data/views/

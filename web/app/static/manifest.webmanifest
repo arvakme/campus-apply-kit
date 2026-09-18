@@ -1,0 +1,59 @@
+{
+  "name": "秋招面板",
+  "short_name": "秋招",
+  "description": "校招投递看板：榜单、日程、待办与 handoff",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fdfdfc",
+  "theme_color": "#fdfdfc",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/static/icon-tile.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "榜单",
+      "url": "/board",
+      "icons": [
+        {
+          "src": "/static/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "日程",
+      "url": "/agenda",
+      "icons": [
+        {
+          "src": "/static/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "待我处理",
+      "url": "/handoffs",
+      "icons": [
+        {
+          "src": "/static/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

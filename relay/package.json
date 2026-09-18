@@ -1,0 +1,14 @@
+{
+  "name": "campus-tg-relay",
+  "private": true,
+  "version": "0.1.0",
+  "description": "共享 Telegram bot 中转（docs/contracts.md §10）：webhook 收更新 → 按实例分队列 → Mac 签名 pull/ack；代发 TG API；每日 21:00 北京时间排行榜播报",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "test": "python3 test/test_relay.py",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.129.0"
+  }
+}

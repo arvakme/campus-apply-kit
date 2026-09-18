@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 秋招面板图标：卡片 + 投递节奏柱状图 + 蓝色截止标记。灰阶为主，蓝色只给主线 -->
+  <g fill="none" stroke="#1d1d1f" stroke-width="20" stroke-linejoin="round">
+    <rect x="70" y="86" width="372" height="340"/>
+    <line x1="118" y1="352" x2="394" y2="352" stroke-width="14"/>
+  </g>
+  <line x1="118" y1="140" x2="268" y2="140" stroke="#c9cdd6" stroke-width="14"/>
+  <rect x="140" y="286" width="44" height="66" fill="#9aa0ac"/>
+  <rect x="212" y="240" width="44" height="112" fill="#6a6f7a"/>
+  <rect x="284" y="196" width="44" height="156" fill="#4263eb"/>
+  <path d="M306 128 L330 166 L282 166 Z" fill="#4263eb"/>
+</svg>

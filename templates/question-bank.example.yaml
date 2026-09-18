@@ -1,0 +1,1428 @@
+# question-bank.yaml 示例（无答案）
+# 整理自真实门户表单里常见的字段，不含任何答案。
+# 用法：复制到 $CAMPUS_INSTANCE/question-bank.yaml，经 host/qb.py 或 web /bank 填 answer；不要手改生成的 question-bank.md。
+# 字段：kind=value 直接填值；rule=填写规则（worker 按规则现场判断）；secret=敏感值，网页只显示已填/未填。
+# required=true 表示多数门户必填，缺了 worker 会 blocked。
+version: 1
+items:
+  # ---------- 账号 ----------
+  - id: login-email
+    question: 默认登录/注册邮箱
+    aliases: [注册邮箱, 登录邮箱, 常用邮箱]
+    category: 账号
+    kind: value
+    required: true
+    hint: 门户提供邮箱方式时优先用它；验证码经 himalaya 读取
+    answer: ""
+    updated: null
+    source: null
+  - id: portal-password
+    question: 新门户注册密码
+    aliases: [设置密码, 登录密码]
+    category: 账号
+    kind: secret
+    required: true
+    placeholder: "<改成你自己的密码>"
+    hint: 占位值，必须改成你自己的密码。建议 10 位以上、字母开头、含大小写字母+数字+特殊字符，可满足大多数门户规则；已有账号以 accounts.md 为准
+    answer: ""
+    updated: null
+    source: null
+  - id: portal-username
+    question: 门户用户名（需要用户名登录的门户用）
+    aliases: [用户名, 登录名]
+    category: 账号
+    kind: value
+    required: false
+    hint: 统一口径如姓名全拼小写；研究院所、银行类门户常要求用户名+密码+图形验证码登录
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 身份 ----------
+  - id: birth-date
+    question: 出生日期
+    aliases: [出生年月, 生日]
+    category: 身份
+    kind: value
+    required: true
+    hint: YYYY-MM-DD；只到月的控件填 YYYY-MM；与身份证一致
+    answer: ""
+    updated: null
+    source: null
+  - id: id-number
+    question: 证件号码
+    aliases: [身份证号, 证件号, 身份证号码]
+    category: 身份
+    kind: secret
+    required: true
+    hint: 证件类型默认身份证；港澳台/护照类门户有独立选项时按实际证件填
+    answer: ""
+    updated: null
+    source: null
+  - id: name-pinyin
+    question: 姓名拼音
+    aliases: [拼音, spell]
+    category: 身份
+    kind: value
+    required: false
+    hint: 有的自建门户必填；全小写连写，如 zhangsan
+    answer: ""
+    updated: null
+    source: null
+  - id: nationality
+    question: 国籍
+    aliases: [国籍地区]
+    category: 身份
+    kind: value
+    required: true
+    hint: 选中国时部分门户追加籍贯字段；留学生另有"外国国籍/居留权"字段见 foreign-residency
+    answer: ""
+    updated: null
+    source: null
+  - id: ethnicity
+    question: 民族
+    aliases: [民族信息]
+    category: 身份
+    kind: value
+    required: true
+    hint: 与身份证一致
+    answer: ""
+    updated: null
+    source: null
+  - id: political-status
+    question: 政治面貌
+    aliases: []
+    category: 身份
+    kind: value
+    required: true
+    hint: 中共党员 / 中共预备党员 / 共青团员 / 群众
+    answer: ""
+    updated: null
+    source: null
+  - id: party-join-date
+    question: 入党时间
+    aliases: [加入党派时间, 入团/入党时间]
+    category: 身份
+    kind: value
+    required: false
+    hint: 写清按预备党员还是正式党员起算；年月控件填 YYYY-MM
+    answer: ""
+    updated: null
+    source: null
+  - id: native-place
+    question: 籍贯
+    aliases: [籍贯城市]
+    category: 身份
+    kind: value
+    required: true
+    hint: 省-市，部分门户要到县
+    answer: ""
+    updated: null
+    source: null
+  - id: origin-place
+    question: 生源地
+    aliases: [出生地, 生源城市]
+    category: 身份
+    kind: value
+    required: false
+    hint: 省-市；高考所在地；“出生地”与生源地同条覆盖，不同则在此注明
+    answer: ""
+    updated: null
+    source: null
+  - id: hukou
+    question: 户口所在地
+    aliases: [户籍所在地, 家庭所在城市, 家庭所在地]
+    category: 身份
+    kind: value
+    required: false
+    hint: 省-市-县；另有“是否集体户口”“家庭所在地”时一并写
+    answer: ""
+    updated: null
+    source: null
+  - id: marital-status
+    question: 婚姻状况
+    aliases: [婚否]
+    category: 身份
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: height
+    question: 身高
+    aliases: []
+    category: 身份
+    kind: value
+    required: false
+    hint: 单位 cm，银行国企常为必填
+    answer: ""
+    updated: null
+    source: null
+  - id: weight
+    question: 体重
+    aliases: []
+    category: 身份
+    kind: value
+    required: false
+    hint: 单位 kg
+    answer: ""
+    updated: null
+    source: null
+  - id: health-status
+    question: 健康状况
+    aliases: []
+    category: 身份
+    kind: value
+    required: false
+    hint: 常见选项 良好 / 健康 / 一般
+    answer: ""
+    updated: null
+    source: null
+  - id: archive-location
+    question: 目前人事档案存放单位名称
+    aliases: [档案存放单位, 档案所在地]
+    category: 身份
+    kind: value
+    required: false
+    hint: 写单位全称；可到当地人社部门官网核实名称；银行类门户常为必填
+    answer: ""
+    updated: null
+    source: null
+  - id: current-status
+    question: 目前状况/当前状态
+    aliases: [当前状态, 目前状态, 求职状态]
+    category: 身份
+    kind: value
+    required: false
+    hint: 应届在读 / 在职 / 待业；选项差异大，写清口径如“应届硕士在读（2027届）”
+    answer: ""
+    updated: null
+    source: null
+  - id: work-years
+    question: 工作年限/工作经验
+    aliases: [工作年限, 工作经验]
+    category: 身份
+    kind: value
+    required: false
+    hint: 应届选“应届毕业生”或 0 年；别误选“1年”
+    answer: ""
+    updated: null
+    source: null
+  - id: own-house
+    question: 是否自有住房
+    aliases: [自有房, 住房情况]
+    category: 身份
+    kind: value
+    required: false
+    hint: 是/否；银行类门户会问
+    answer: ""
+    updated: null
+    source: null
+  - id: poverty-card
+    question: 是否建档立卡
+    aliases: [建档立卡, 建档立卡贫困户]
+    category: 身份
+    kind: value
+    required: false
+    hint: 是/否；农行等门户问
+    answer: ""
+    updated: null
+    source: null
+  - id: military-service
+    question: 服役经历
+    aliases: [是否服役, 服兵役]
+    category: 身份
+    kind: value
+    required: false
+    hint: 无 / 有则起止时间+兵种；农行等门户问
+    answer: ""
+    updated: null
+    source: null
+  - id: emigration
+    question: 移居（境外）情况
+    aliases: [移居, 移民情况]
+    category: 身份
+    kind: value
+    required: false
+    hint: 无 / 有则国家+时间；农行等门户问
+    answer: ""
+    updated: null
+    source: null
+  - id: highest-edu-degree
+    question: 最高学历/最高学位
+    aliases: [最高学历, 最高学位, 是否最高学历]
+    category: 身份
+    kind: value
+    required: false
+    hint: 如“硕士研究生/硕士”；教育段内另有“是否最高学历/学位”标志位按段答；金融、运营商类门户常为必填
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 联系 ----------
+  - id: mobile
+    question: 手机号码
+    aliases: [手机, 联系电话, 移动电话]
+    category: 联系
+    kind: value
+    required: true
+    hint: 与 profile 一致；门户预填了旧号时改成此号，登录绑定号不同的在 accounts.md 注明
+    answer: ""
+    updated: null
+    source: null
+  - id: mailing-address
+    question: 邮寄地址
+    aliases: [通信地址, 通讯地址, 联系地址]
+    category: 联系
+    kind: value
+    required: true
+    hint: 详细到门牌号；邮编可空
+    answer: ""
+    updated: null
+    source: null
+  - id: current-city
+    question: 现居住地（城市-区）
+    aliases: [目前所在地, 现居住城市, 所在地点]
+    category: 联系
+    kind: value
+    required: true
+    hint: 省-市-区
+    answer: ""
+    updated: null
+    source: null
+  - id: current-address-detail
+    question: 现居详细地址
+    aliases: [现住址]
+    category: 联系
+    kind: value
+    required: false
+    hint: 街道级
+    answer: ""
+    updated: null
+    source: null
+  - id: wechat
+    question: 微信
+    aliases: [微信号]
+    category: 联系
+    kind: value
+    required: false
+    hint: 不想填写时 answer 写“留空”
+    answer: ""
+    updated: null
+    source: null
+  - id: qq
+    question: QQ
+    aliases: []
+    category: 联系
+    kind: value
+    required: false
+    hint: 不想填写时 answer 写“留空”
+    answer: ""
+    updated: null
+    source: null
+  - id: emergency-contact
+    question: 紧急联系人及电话
+    aliases: [备用联系人, 紧急联络人]
+    category: 联系
+    kind: value
+    required: false
+    hint: 姓名 + 关系 + 电话；电话是否用占位值由你决定并写明
+    answer: ""
+    updated: null
+    source: null
+  - id: postal-code
+    question: 邮编
+    aliases: [邮政编码]
+    category: 联系
+    kind: value
+    required: false
+    hint: 通信地址对应邮编；有的门户必填，先备好
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 教育 ----------
+  - id: english-level
+    question: 英语等级
+    aliases: [外语水平, 最高英语等级]
+    category: 教育
+    kind: value
+    required: true
+    hint: 填最高等级，如大学英语六级
+    answer: ""
+    updated: null
+    source: null
+  - id: english-score
+    question: 英语等级成绩
+    aliases: [六级成绩, 英语成绩]
+    category: 教育
+    kind: value
+    required: true
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: cet6-date
+    question: 六级获得时间
+    aliases: [英语证书获得时间]
+    category: 教育
+    kind: value
+    required: false
+    hint: 官方只给到月时统一写一个日期；年月控件填 YYYY-MM
+    answer: ""
+    updated: null
+    source: null
+  - id: cet4
+    question: 大学英语四级成绩及考试时间
+    aliases: [四级成绩, CET4]
+    category: 教育
+    kind: value
+    required: false
+    hint: 部分门户在填了六级后仍强制四级；没考过写明，worker 不能填 0
+    answer: ""
+    updated: null
+    source: null
+  - id: ielts-toefl
+    question: 雅思/托福成绩
+    aliases: [IELTS, TOEFL, 其他语言成绩]
+    category: 教育
+    kind: value
+    required: false
+    hint: 总分 + 考试日期
+    answer: ""
+    updated: null
+    source: null
+  - id: language-proficiency
+    question: 语言掌握程度（听说/读写分级）
+    aliases: [听力, 读写, 掌握程度, 精通程度]
+    category: 教育
+    kind: value
+    required: false
+    hint: 多个门户实测：掌握程度、听说、读写各一档（精通/熟练/良好/一般）
+    answer: ""
+    updated: null
+    source: null
+  - id: department
+    question: 院系（各学历）
+    aliases: [学院, 所在院系]
+    category: 教育
+    kind: value
+    required: true
+    hint: 按学历分行写，如“硕士：…；本科：…”
+    answer: ""
+    updated: null
+    source: null
+  - id: student-id
+    question: 学号（各学历）
+    aliases: [学号]
+    category: 教育
+    kind: secret
+    required: false
+    hint: 按学历分行写
+    answer: ""
+    updated: null
+    source: null
+  - id: major-rank
+    question: 专业排名
+    aliases: [年级排名, 班级排名, 成绩排名]
+    category: 教育
+    kind: rule
+    required: true
+    hint: 写真实档位，以及选项没有该档时怎么选；有的门户要求 N/M 半角格式
+    answer: ""
+    updated: null
+    source: null
+  - id: gpa
+    question: GPA/均分/加权成绩（各学历）
+    aliases: [成绩, 个人绩点, 平均分]
+    category: 教育
+    kind: value
+    required: true
+    hint: 写原始分制，并写好 4.0 制、5.0 制换算值，表单要哪种填哪种
+    answer: ""
+    updated: null
+    source: null
+  - id: master-type
+    question: 硕士类型
+    aliases: [学位类型]
+    category: 教育
+    kind: value
+    required: false
+    hint: 学术型 / 专业型；本科生删掉此条
+    answer: ""
+    updated: null
+    source: null
+  - id: research-direction
+    question: 研究方向（各学历）
+    aliases: [研究领域]
+    category: 教育
+    kind: value
+    required: false
+    hint: 本科一般写“无”
+    answer: ""
+    updated: null
+    source: null
+  - id: major-mapping
+    question: 专业名称在门户专业库里怎么选
+    aliases: [专业库映射, 所学专业]
+    category: 教育
+    kind: rule
+    required: true
+    hint: 写优先级，如“①库中有 X 类选 X ②有 Y 选 Y ③都没有选其他并手填原专业名”
+    answer: ""
+    updated: null
+    source: null
+  - id: graduation-date
+    question: 毕业时间（各学历，真实日期）
+    aliases: [毕业日期, 预计毕业时间]
+    category: 教育
+    kind: value
+    required: true
+    hint: 写真实日期，与学信网或学校证明一致
+    answer: ""
+    updated: null
+    source: null
+  - id: thesis-title
+    question: 毕业设计/论文题目（各学历）
+    aliases: [毕业设计, 毕业论文]
+    category: 教育
+    kind: value
+    required: false
+    hint: 尚未确定时写明，不要让 worker 编
+    answer: ""
+    updated: null
+    source: null
+  - id: high-school
+    question: 高中教育经历
+    aliases: [高中]
+    category: 教育
+    kind: value
+    required: false
+    hint: 学校名、所在省市县、起止年月
+    answer: ""
+    updated: null
+    source: null
+  - id: overseas-days
+    question: 境外停留天数 / 境外学习天数
+    aliases: [境外学习天数, 留学天数]
+    category: 教育
+    kind: value
+    required: false
+    hint: 留学生必填；按出入境记录计算，不要按学制推算
+    answer: ""
+    updated: null
+    source: null
+  - id: student-loan
+    question: 生源地助学贷款
+    aliases: [助学贷款]
+    category: 教育
+    kind: value
+    required: false
+    hint: 是 / 否
+    answer: ""
+    updated: null
+    source: null
+  - id: degree-award-date
+    question: 学位授予时间（各学历）
+    aliases: [学位授予, 授予时间]
+    category: 教育
+    kind: value
+    required: false
+    hint: 一般≈毕业时间；有的门户是独立日历控件
+    answer: ""
+    updated: null
+    source: null
+  - id: learning-form
+    question: 学习形式/受教育类型/学历类型（各学历）
+    aliases: [学习形式, 受教育类型, 学历类型]
+    category: 教育
+    kind: value
+    required: true
+    hint: 全日制 / 海外留学（海外留学生）/ 统招全日制，选项名各门户不同；海外学历一律选留学类
+    answer: ""
+    updated: null
+    source: null
+  - id: schooling-length
+    question: 学制（各学历）
+    aliases: [学制, 学制时长]
+    category: 教育
+    kind: value
+    required: false
+    hint: 两年制/三年制/四年制或"N年及以上"；国企、银行类门户常为必填
+    answer: ""
+    updated: null
+    source: null
+  - id: training-mode
+    question: 培养方式（各学历）
+    aliases: [培养方式]
+    category: 教育
+    kind: value
+    required: false
+    hint: 非定向就业 / 定向；国企、金融类门户会出现
+    answer: ""
+    updated: null
+    source: null
+  - id: discipline-attr
+    question: 学科属性（各学历）
+    aliases: [学科属性, 学科门类]
+    category: 教育
+    kind: value
+    required: false
+    hint: 工学/理学/管理学等；部分门户必填
+    answer: ""
+    updated: null
+    source: null
+  - id: coherent-training
+    question: 是否贯通式培养
+    aliases: [贯通式培养, 贯通培养]
+    category: 教育
+    kind: value
+    required: false
+    hint: 是/否；部分门户必填，本硕连读类才选是
+    answer: ""
+    updated: null
+    source: null
+  - id: advisor-name
+    question: 导师姓名（各学历）
+    aliases: [导师, 指导老师]
+    category: 教育
+    kind: value
+    required: false
+    hint: 研究院所类门户常为必填；授课型/无导师写"无"，本科写毕设导师或"无"
+    answer: ""
+    updated: null
+    source: null
+  - id: edu-referee
+    question: 教育经历证明人（各学历）
+    aliases: [证明人, 在校证明人]
+    category: 教育
+    kind: value
+    required: false
+    hint: 研究院所类门户常为必填；可写导师/辅导员姓名
+    answer: ""
+    updated: null
+    source: null
+  - id: major-courses
+    question: 所学主要课程（各学历）
+    aliases: [主要课程, 专业课程, 主修课程]
+    category: 教育
+    kind: value
+    required: false
+    hint: 研究院所类门户常为必填；6-8 门核心课，顿号分隔
+    answer: ""
+    updated: null
+    source: null
+  - id: school-city
+    question: 院校城市/学校所在地（各学历）
+    aliases: [学校所在地, 院校所在地]
+    category: 教育
+    kind: value
+    required: false
+    hint: 国内到市；海外城市常无选项→选"海外"或留空，不硬凑国内城市
+    answer: ""
+    updated: null
+    source: null
+  - id: overseas-study-flag
+    question: 是否有国外/港澳台学习经历
+    aliases: [国外学习经历, 港澳台学习经历]
+    category: 教育
+    kind: value
+    required: false
+    hint: 是/否；部分门户本科段触发，海外学历按段答
+    answer: ""
+    updated: null
+    source: null
+  - id: liufu-deadline
+    question: 能否在公告时限前完成留服认证
+    aliases: [留服认证时限, 学历认证取得时间]
+    category: 教育
+    kind: value
+    required: false
+    hint: 留学生必填组；留服办理约 1-2 个月，按公告截止日（常见 2027-08-31/09-30）倒推回答
+    answer: ""
+    updated: null
+    source: null
+  - id: foreign-residency
+    question: 是否有外国国籍或境外永久居留权
+    aliases: [外国国籍, 居留权, 永久居留权]
+    category: 教育
+    kind: value
+    required: false
+    hint: 留学生必填组；是/否
+    answer: ""
+    updated: null
+    source: null
+  - id: overseas-work
+    question: 是否有一年以上海外工作经历
+    aliases: [海外工作经历, 境外工作经历]
+    category: 教育
+    kind: value
+    required: false
+    hint: 留学生必填组；是/否+单位
+    answer: ""
+    updated: null
+    source: null
+  - id: study-country
+    question: 留学国家（各海外学历）
+    aliases: [留学国家, 留学国别]
+    category: 教育
+    kind: value
+    required: false
+    hint: 留学生必填组；多国经历分行写
+    answer: ""
+    updated: null
+    source: null
+  - id: edu-cert-no
+    question: 学历证书编号/毕业证编号（各已毕业学历）
+    aliases: [学历证书编号, 毕业证编号, 毕业证书编号]
+    category: 教育
+    kind: value
+    required: true
+    hint: 编号类字段一律按必填预置。查询：毕业证原件右下角"证书编号"，或学信网→学信档案→学历查询→该学历→证书编号；在读学历无编号，留空并注明
+    answer: ""
+    updated: null
+    source: null
+  - id: degree-cert-no
+    question: 学位证书编号（各已授予学位）
+    aliases: [学位证书编号, 学位证编号]
+    category: 教育
+    kind: value
+    required: true
+    hint: 编号类字段一律按必填预置。查询：学位证原件"证书编号"，或学信网→学位查询（学位网已并入学信网）；未取得学位的学历留空并注明
+    answer: ""
+    updated: null
+    source: null
+  - id: liufu-cert-no
+    question: 留服认证书编号（海外学历）
+    aliases: [留服认证编号, 学历认证书编号, 教育部留学服务中心认证书编号]
+    category: 教育
+    kind: value
+    required: true
+    hint: 海外学历必备：教育部留学服务中心网上服务大厅（zwfw.cscse.edu.cn）申请认证书，编号在 PDF 右上角；未取得先办认证再回填
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 家庭 ----------
+  - id: father-name
+    question: 父亲姓名
+    aliases: [亲属姓名]
+    category: 家庭
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: mother-name
+    question: 母亲姓名
+    aliases: []
+    category: 家庭
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: parents-phone
+    question: 父母手机号
+    aliases: [亲属电话]
+    category: 家庭
+    kind: value
+    required: false
+    hint: 不提供真实号码时，在 answer 里写明你决定使用的占位值；worker 不自行生成
+    answer: ""
+    updated: null
+    source: null
+  - id: parents-employer
+    question: 父母工作单位/职务
+    aliases: [亲属工作单位, 亲属职务, 在职状态]
+    category: 家庭
+    kind: value
+    required: false
+    hint: 同上；另有"在岗/退休"在职状态字段时一并写
+    answer: ""
+    updated: null
+    source: null
+  - id: parents-political
+    question: 父母政治面貌
+    aliases: [亲属政治面貌]
+    category: 家庭
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: parents-birth
+    question: 父母出生日期
+    aliases: [亲属出生日期]
+    category: 家庭
+    kind: value
+    required: false
+    hint: 不提供时写明，门户默认值会被提醒用户核对
+    answer: ""
+    updated: null
+    source: null
+  - id: spouse-children
+    question: 配偶子女情况
+    aliases: [配偶, 子女情况]
+    category: 家庭
+    kind: value
+    required: false
+    hint: 无 / 有则姓名+出生日期；金融类门户常为必填
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 声明 ----------
+  - id: decl-disease
+    question: 是否有重大疾病/传染病
+    aliases: [健康声明]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实（有/无），映射到题干时按 rules.declaration-wording
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-bad-record
+    question: 是否有不良记录/违法犯罪记录
+    aliases: [违法犯罪记录]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-equity
+    question: 是否持有其他公司股权或参与经营
+    aliases: [经商办企业]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-relative-company
+    question: 恋人/亲属/朋友是否在本公司（含关联公司）任职
+    aliases: [亲属回避, 亲属在本行工作]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-relative-industry
+    question: 恋人/亲属/朋友是否在同行业任职
+    aliases: [亲属同业任职, 亲属监管系统工作经历]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实；金融类门户会细分到监管系统
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-penalty
+    question: 在校是否有处罚记录
+    aliases: [处分记录, 惩罚信息]
+    category: 声明
+    kind: value
+    required: true
+    hint: 写事实
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-regulator
+    question: 本人/亲属是否在监管系统任职（证监会/银保监等）
+    aliases: [证监会系统从业, 监管系统工作经历, 近亲属监管]
+    category: 声明
+    kind: value
+    required: false
+    hint: 金融类门户必填；本人与亲属分两问，写事实
+    answer: ""
+    updated: null
+    source: null
+  - id: decl-industry-exp
+    question: 本人是否有本行业从业经历（银行从业/运营商实习等）
+    aliases: [银行从业, 运营商实习, 本行业从业]
+    category: 声明
+    kind: value
+    required: false
+    hint: 按行业泛化：银行门户问银行从业、电信门户问运营商实习；写事实
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 偏好 ----------
+  - id: expected-annual-salary
+    question: 期望年薪
+    aliases: [期望薪资]
+    category: 偏好
+    kind: value
+    required: true
+    hint: 区间，如“X-Y 万”
+    answer: ""
+    updated: null
+    source: null
+  - id: expected-monthly-salary
+    question: 期望月薪
+    aliases: [期望月薪（税前）]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 未单独给出时按 rules.monthly-from-annual
+    answer: ""
+    updated: null
+    source: null
+  - id: current-salary
+    question: 目前年薪/现月薪
+    aliases: [目前年薪, 现月薪, 当前薪资]
+    category: 偏好
+    kind: value
+    required: false
+    hint: 应届填 0 或留空，写清口径；实测填 0 可过
+    answer: ""
+    updated: null
+    source: null
+  - id: expected-function
+    question: 期望从事行业/职能/岗位类型
+    aliases: [期望从事行业, 期望从事职业, 岗位类型, 期望职能]
+    category: 偏好
+    kind: value
+    required: false
+    hint: 行业+职业各写一条口径；部分门户必填
+    answer: ""
+    updated: null
+    source: null
+  - id: exam-city
+    question: 笔试/考试城市（首选考试城市/面试站点）
+    aliases: [笔试城市, 考试地点, 首选考试城市, 面试站点, 笔试地点]
+    category: 偏好
+    kind: rule
+    required: false
+    hint: 默认按 intent.cities.prefer 顺序；意向城市无考点时取下一个；有"远程"选项按用户口径选
+    answer: ""
+    updated: null
+    source: null
+  - id: referral-code
+    question: 内推码/推荐码/推荐方式
+    aliases: [内推码, 推荐码, 推荐方式]
+    category: 偏好
+    kind: value
+    required: false
+    hint: 无码一律留空或选"无"，不编造
+    answer: ""
+    updated: null
+    source: null
+  - id: volunteer-order
+    question: 志愿顺序（第1/2志愿/调剂志愿）
+    aliases: [志愿顺序, 第1志愿, 调剂志愿]
+    category: 偏好
+    kind: rule
+    required: false
+    hint: 默认第一志愿；多志愿门户按岗位匹配度排序
+    answer: ""
+    updated: null
+    source: null
+  - id: apply-reason
+    question: 应聘理由
+    aliases: [求职理由, 应聘动机]
+    category: 偏好
+    kind: value
+    required: false
+    hint: 一句话口径预写；银行类门户常为必填
+    answer: ""
+    updated: null
+    source: null
+  - id: info-source
+    question: 招聘信息来源
+    aliases: [获取职位信息的渠道, 获知渠道, 信息来源]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 写统一口径，如“一律选官网类选项”
+    answer: ""
+    updated: null
+    source: null
+  - id: available-date
+    question: 到岗时间
+    aliases: [预计报到时间, 预计可到岗时间]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 写规则，如“选项选最快一项；开放填写填随时可到岗；日期控件选最早可选日”
+    answer: ""
+    updated: null
+    source: null
+  - id: pre-onboard-intern
+    question: 是否接受入职前实习
+    aliases: [是否能提前实习, 实习时间]
+    category: 偏好
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: accept-overseas
+    question: 是否接受海外工作
+    aliases: []
+    category: 偏好
+    kind: value
+    required: false
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: accept-adjust
+    question: 是否接受调剂
+    aliases: [服从调剂, 服从分配, 是否接受地点调剂]
+    category: 偏好
+    kind: value
+    required: true
+    hint: ""
+    answer: ""
+    updated: null
+    source: null
+  - id: expected-city
+    question: 意向/期望城市
+    aliases: [期望工作城市, 意向工作地点, 期望面试城市, 笔试城市]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 默认按 intent.cities.prefer 顺序；这里只写例外
+    answer: ""
+    updated: null
+    source: null
+  - id: hobbies
+    question: 爱好特长
+    aliases: [兴趣爱好, 个人特长]
+    category: 偏好
+    kind: value
+    required: false
+    hint: 一句话
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 经历 ----------
+  - id: self-evaluation
+    question: 自我评价/评语
+    aliases: [自我描述, 个人描述, 评价内容]
+    category: 经历
+    kind: value
+    required: true
+    hint: 100–200 字；避免 # $ / < > 等特殊字符，部分门户会拒收
+    answer: ""
+    updated: null
+    source: null
+  - id: certificates
+    question: 资格证书
+    aliases: [职业资格证书, 计算机证书]
+    category: 经历
+    kind: value
+    required: false
+    hint: 指软考、教资、CPA 等职业资格；四六级不算。没有写“无”
+    answer: ""
+    updated: null
+    source: null
+  - id: awards
+    question: 获奖情况（优先 3 条）
+    aliases: [奖励情况, 表彰与奖励, 荣誉]
+    category: 经历
+    kind: value
+    required: false
+    hint: 每条写 奖项全称 · 级别（国家级/省部级/院校级）· 日期；有字数限制的门户用简称
+    answer: ""
+    updated: null
+    source: null
+  - id: campus-practice
+    question: 在校实践
+    aliases: [社会实践, 实践经历]
+    category: 经历
+    kind: value
+    required: false
+    hint: 名称 + 起止年月；部分门户强制至少一条
+    answer: ""
+    updated: null
+    source: null
+  - id: campus-role
+    question: 在校职务
+    aliases: [学生干部, 社团经历]
+    category: 经历
+    kind: value
+    required: false
+    hint: 组织 + 职务 + 起止年月
+    answer: ""
+    updated: null
+    source: null
+  - id: intern-contact
+    question: 实习/实践单位证明人及电话
+    aliases: [单位联系人, 证明人]
+    category: 经历
+    kind: value
+    required: false
+    hint: 不提供真实联系人时，在 answer 里写明占位值
+    answer: ""
+    updated: null
+    source: null
+  - id: intern-city
+    question: 各实习单位所在城市
+    aliases: [实习地点, 工作地点]
+    category: 经历
+    kind: value
+    required: false
+    hint: 按单位分行写，简历没写城市的补在这里
+    answer: ""
+    updated: null
+    source: null
+  - id: work-experience
+    question: 正式工作经历
+    aliases: [工作经历, 正式工作]
+    category: 经历
+    kind: value
+    required: false
+    hint: 应届写"无"或选否；有则单位+职位+起止
+    answer: ""
+    updated: null
+    source: null
+  - id: project-links
+    question: 项目链接/社交账号
+    aliases: [项目链接, Github, 个人主页, 社交账号]
+    category: 经历
+    kind: value
+    required: false
+    hint: GitHub/作品链接各一条；互联网、研究院所类门户会出现
+    answer: ""
+    updated: null
+    source: null
+  - id: publications
+    question: 论文/著作/专利/发表文章
+    aliases: [发表论文, 专利, 取得成果, 著作]
+    category: 经历
+    kind: value
+    required: false
+    hint: 无则写"无"；研究院所、银行、央企类门户会出现
+    answer: ""
+    updated: null
+    source: null
+  - id: computer-skills
+    question: 计算机/IT 技能
+    aliases: [技能名称, IT水平, 技能及证书]
+    category: 经历
+    kind: value
+    required: false
+    hint: 语言/框架/工具，顿号分隔；有的门户要"技能名称+掌握程度+使用时间"三件套
+    answer: ""
+    updated: null
+    source: null
+
+  # ---------- 基础条目（fill-moka 等批量填表靠这些命中；教育类条目的 id 或问题里带 master|bachelor|硕士|本科 才能按阶段区分）----------
+  - id: name
+    question: "姓名"
+    aliases: [真实姓名, 中文姓名]
+    category: 身份
+    kind: value
+    required: true
+    hint: "与身份证一致"
+    answer: ""
+    updated: null
+    source: null
+  - id: gender
+    question: "性别"
+    aliases: []
+    category: 身份
+    kind: value
+    required: true
+    hint: "男 / 女"
+    answer: ""
+    updated: null
+    source: null
+  - id: highest-education
+    question: "最高学历"
+    aliases: [学历]
+    category: 教育
+    kind: value
+    required: true
+    hint: "如 硕士研究生 / 本科"
+    answer: ""
+    updated: null
+    source: null
+  - id: highest-degree
+    question: "最高学位"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "如 硕士 / 学士"
+    answer: ""
+    updated: null
+    source: null
+  - id: school-master
+    question: "硕士毕业院校/最高学历学校名称"
+    aliases: [毕业学校全称]
+    category: 教育
+    kind: value
+    required: true
+    hint: "没读硕士就删掉所有 *-master 条目，并把「毕业学校全称」这个别名挪到 school-bachelor"
+    answer: ""
+    updated: null
+    source: null
+  - id: school-bachelor
+    question: "本科毕业院校"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "学校全称"
+    answer: ""
+    updated: null
+    source: null
+  - id: major-master-text
+    question: "硕士专业名称（文本框直接填写时）"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "以简历为准"
+    answer: ""
+    updated: null
+    source: null
+  - id: major-bachelor
+    question: "本科专业名称"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "以简历为准"
+    answer: ""
+    updated: null
+    source: null
+  - id: study-period-master
+    question: "硕士就读时间（起止）"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "格式：YYYY-MM 至 YYYY-MM（fill-moka 按这个格式解析起止年月）"
+    answer: ""
+    updated: null
+    source: null
+  - id: study-period-bachelor
+    question: "本科就读时间（起止）"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "格式：YYYY-MM 至 YYYY-MM"
+    answer: ""
+    updated: null
+    source: null
+  - id: graduation-date-master
+    question: "硕士毕业时间"
+    aliases: [毕业时间]
+    category: 教育
+    kind: value
+    required: true
+    hint: "格式：YYYY-MM-DD"
+    answer: ""
+    updated: null
+    source: null
+  - id: study-mode
+    question: "硕士学习形式/培养方式/学历性质"
+    aliases: [学习形式, 培养方式]
+    category: 教育
+    kind: value
+    required: true
+    hint: "如 全日制；留学生写：海外留学生（没有这个选项时选全日制一类）"
+    answer: ""
+    updated: null
+    source: null
+  - id: study-mode-bachelor
+    question: "本科学习形式/学历性质"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "如 全日制（统招）"
+    answer: ""
+    updated: null
+    source: null
+  - id: education-level-bachelor
+    question: "本科阶段学历"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "本科"
+    answer: ""
+    updated: null
+    source: null
+  - id: degree-bachelor
+    question: "本科阶段学位"
+    aliases: []
+    category: 教育
+    kind: value
+    required: true
+    hint: "如 学士（工学学士）"
+    answer: ""
+    updated: null
+    source: null
+  # ---------- 分段经历（一段一条，worker 逐项照抄，不用每家都翻简历拆字段）----------
+  - id: exp-index
+    question: "分段经历怎么填（实习/项目/获奖/语言）"
+    aliases: []
+    category: 经历
+    kind: rule
+    required: false
+    hint: "写清：各类按什么顺序用哪几条；日期控件到月/到日怎么填；「至今」怎么处理；描述超字数用短描述；薪资/证明人/离职原因的口径"
+    answer: ""
+    updated: null
+    source: null
+  - id: exp-intern-1
+    question: "实习经历 1（最近）"
+    aliases: []
+    category: 经历
+    kind: value
+    required: false
+    hint: "每行一个「键：值」：公司 / 部门 / 职位 / 起止（YYYY-MM 至 YYYY-MM 或 至今）/ 工作地点 / 短描述（约 200 字）/ 长描述 / 技术栈。只写简历上有的事实"
+    answer: ""
+    updated: null
+    source: null
+  - id: exp-project-1
+    question: "项目经历 1（最近）"
+    aliases: []
+    category: 经历
+    kind: value
+    required: false
+    hint: "项目名称 / 性质 / 角色 / 起止 / 链接 / 技术栈 / 短描述 / 项目中职责（短）/ 项目中职责（长）"
+    answer: ""
+    updated: null
+    source: null
+  - id: exp-award-1
+    question: "获奖 1"
+    aliases: []
+    category: 经历
+    kind: value
+    required: false
+    hint: "奖项名称 / 级别 / 获奖时间（YYYY-MM）/ 颁发单位（以证书为准）"
+    answer: ""
+    updated: null
+    source: null
+  - id: exp-language-en
+    question: "语言能力：英语"
+    aliases: []
+    category: 经历
+    kind: value
+    required: false
+    hint: "语种 / 等级 / 成绩 / 掌握程度 / 听说 / 读写"
+    answer: ""
+    updated: null
+    source: null
+rules:
+  - id: declaration-wording
+    text: 声明类问题按具体问法判断，不机械选“否”。问“是否有不良记录”答否，问“是否无不良记录”答是。拿不准的措辞 blocked 问主持人。
+  - id: rank-downgrade
+    text: 排名、分数段等选项没有精确档位时，向下取最近的档（例如没有“前15%”选“前20%”），不向上取。
+  - id: city-order
+    text: 意向城市多选时按 intent.cities.prefer 顺序勾选可选项；岗位城市固定的随岗位；只能选 avoid 城市时按 intent.judgment_notes 处理。
+  - id: monthly-from-annual
+    text: 期望月薪未单独给出时，取期望年薪上限除以 12，并按控件单位（元/千/万）换算。
+  - id: numbers-no-fabrication
+    text: GPA、排名、分数、天数等数字只取简历或问题库；都没有就留空，必填则 blocked。不得填 0 或估算值冒充。
+  - id: major-mapping
+    text: 专业库没有精确专业时，先按 major-mapping 条目的优先级选；该条为空时选最接近的标准专业名，仍没有选“其他”并手填简历原专业名。
+  - id: intern-into-project
+    text: 表单没有“实习经历”栏但有“项目经历”栏时，把实习经历写进项目经历。
+  - id: ongoing-end-date
+    text: 进行中的经历，控件没有“至今”时结束时间选当前月，并在留痕注明。
+  - id: placeholder-values
+    text: 家人或实习联系人的联系方式等，用户选择不提供真实值时，占位值必须由用户写进对应条目；worker 只照抄，不自行生成。
+  - id: old-account-override
+    text: 登录已有历史账号时，存量字段与问题库冲突的以问题库为准覆盖；旧简历附件替换为当前版本并刷新回读。
+  - id: attachments-policy
+    text: 表单强制上传成绩单、在读证明、学生证等材料时，按 intent.policies.attachments_required 处理；外企一律 blocked。
+  - id: special-chars
+    text: 长文本字段避免 # $ / < > 等特殊字符，技术栈用顿号分隔（如“Go、Python”），部分门户会静默拒收。
+  - id: cert-number-lookup
+    text: 证书编号查询路径——学历证书编号=毕业证原件右下角/学信网→学历查询；学位证书编号=学位证原件/学信网→学位查询；留服认证书编号=教育部留学服务中心认证书 PDF 右上角；四六级成绩单编号在成绩报告单上。编号留空必须注明原因（在读/未取证）。
+  - id: cert-number-blankable
+    text: 编号类字段被前端标必填但问题库无值时：不编造；先尝试留空保存（部分门户仅前端校验、服务端接受空值），成功则留痕标“可补录”并提醒用户补录；保存被拦则 blocked 问主持人。
+  - id: overseas-education-group
+    text: 海外学历字段是连锁触发：教育段选“国外高校/海外留学”后会出现留服认证时限、外国国籍居留权、海外工作经历、留学国家、境外停留/学习天数等必填组——海外背景用户必须把整组（liufu-deadline/foreign-residency/overseas-work/study-country/overseas-days）预置齐全。
+  - id: bank-extra-fields
+    text: 银行/国企门户字段面更宽：身高、体重、健康、入党时间、户口到县、生源地、档案单位、父母全字段、高中段、笔试城市、生活照集中出现；投这类门户前先确认对应条目已填。
+  - id: late-validation
+    text: 部分门户的必填校验只在点保存/提交后才全部暴露；进这类门户前按该门户 playbook 列的必填清单一次备齐，再保存。
+  - id: forced-rows
+    text: 北森系等门户的“在校实践/在校职务/获奖”行强制存在且不可删，空行也拦提交——问题库至少各备一条可填内容；若 portal 的“添加”按钮语义是开新空块而非保存，多出的空白块要删掉。
+  - id: optional-blank
+    text: 选填字段无数据源时留空即可，不编造；但“留空可补录”只适用于明确标注选填或实测可空提交的字段，必填字段无数据源仍走 blocked。留空的必填项在留痕里标“可补录”。
+  - id: attachment-verify-refresh
+    text: 附件上传的验证标准只有一条：保存后刷新页面/重进该页回读，确认服务端文件名/链接在。页面即时回显不等于落库。
+  - id: education-per-degree
+    text: 教育类条目按学历分行写（如“硕士：…；本科：…”），高中段单独一条；表单按段拆问时逐段对应。
+  - id: date-normalize
+    text: 日期统一按控件要求转 YYYY-MM-DD / YYYY-MM / YYYY/MM/DD；进行中经历无“至今”选项时取当前月并在留痕注明。
+  - id: volunteer-first
+    text: 志愿顺序默认第1志愿；多志愿门户按岗位匹配度排序，不重复投递同岗。
+  - id: industry-decl-generalize
+    text: “本行业从业/亲属任职”类声明按门户行业泛化：银行问银行从业、电信问运营商实习、金融问监管系统任职——用 decl-industry-exp / decl-regulator / decl-relative-* 一组覆盖。
+
+  # ---------- 门户错题本沉淀（2026-09-16 北森） ----------
+  - id: expected-occupation
+    question: 期望从事职业/职能类别（门户职业树、radio 列表）
+    aliases: [期望从事职业, 职能类别, 期望职位类别]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 写成"按所投岗位类型怎么选"的映射规则，而不是一个固定值。示例：测试岗→软件测试类；后端/全栈/嵌入式软件→软件工程师类；产品岗→产品经理类；AI 应用→人工智能大类下的应用开发项
+    answer: ""
+    updated: null
+    source: null
+  # ---------- 学历证明沉淀 ----------
+  - id: enrolment-proof
+    question: 在读证明/学籍证明（附件）
+    aliases: [在读证明, 学籍证明, 学生证明, Letter of Enrolment]
+    category: 声明
+    kind: rule
+    required: false
+    hint: 写成"交哪份文件、按什么顺序"的规则：按你实际的学籍状态，写清首选哪份、门户不收时换哪份、哪种要求直接标不合适
+    answer: ""
+    updated: null
+    source: null
+  - id: master-award-date
+    question: 学位授予日期（Award/Conferral date，海外院校）
+    aliases: [学位授予日期, Award date]
+    category: 教育
+    kind: value
+    required: false
+    hint: 授予日期和毕业证日期不同的院校才需要这条。写清两个日期各自的来源，以及表单问哪个时填哪个
+    answer: ""
+    updated: null
+    source: null
+  - id: cscse-cert
+    question: 留服认证（教育部留学服务中心学历学位认证）
+    aliases: [留服认证, 学历认证, 认证书编号]
+    category: 教育
+    kind: rule
+    required: false
+    hint: 境外学历才需要这条。写成规则：已认证填什么、未认证填什么、必填编号而你没有时怎么办、哪种要求直接标不合适
+    answer: ""
+    updated: null
+    source: null
+  - id: job-type-rule
+    question: 岗位性质（校招全职/实习）
+    aliases: [实习, 全职, 岗位类型]
+    category: 偏好
+    kind: rule
+    required: true
+    hint: 写清实习岗投不投、同一公司全职和实习都有时选哪个。示例："全职和实习都投，同公司有 27 届全职岗优先全职"
+    answer: ""
+    updated: null
+    source: null

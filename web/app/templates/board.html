@@ -1,0 +1,495 @@
+<!-- web/app/templates/board.html：每日榜单页。board.py 注入 JSON 数据与导航；模板本身不可直接打开 -->
+<meta charset="utf-8">
+<title>每日榜单</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="秋招">
+<style>
+  :root {
+    --canvas: #fdfdfc; --card-bg: #ffffff; --card-shadow: rgba(30,33,44,.14);
+    --ink: #1d1d1f; --ink-soft: #6a6f7a; --ink-faint: #9aa0ac;
+    --grid: #c9cdd6; --line-strong: #55595f;
+    --blue: #4263eb; --blue-fill: #dbe2fb;
+    --seq1: #f1ac4b; --seq1-fill: #fbe8cd;
+    --seq2: #e16919; --seq2-fill: #f8dcc6;
+    --seq3: #e03131; --seq3-fill: #f9d4dd;
+    --tooltip-bg: #1d1d1f; --tooltip-ink: #fdfdfc;
+    --row-hi: #f2f3f6;
+    --font-serif: Charter, Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Times New Roman', serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --lw-card: 1.5px; --lw-content: 1.25px; --lw-grid: .8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #131316; --card-bg: #1c1c21; --card-shadow: rgba(0,0,0,.5);
+      --ink: #e8e8ea; --ink-soft: #9aa0ac; --ink-faint: #6a6f7a;
+      --grid: #34363d; --line-strong: #b9bdc6;
+      --blue: #748ffc; --blue-fill: #2b3452;
+      --seq1: #f4b75f; --seq1-fill: #45351c;
+      --seq2: #f4801f; --seq2-fill: #4a2d14;
+      --seq3: #f25050; --seq3-fill: #4c1f24;
+      --tooltip-bg: #e8e8ea; --tooltip-ink: #131316;
+      --row-hi: #24242b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #131316; --card-bg: #1c1c21; --card-shadow: rgba(0,0,0,.5);
+    --ink: #e8e8ea; --ink-soft: #9aa0ac; --ink-faint: #6a6f7a;
+    --grid: #34363d; --line-strong: #b9bdc6;
+    --blue: #748ffc; --blue-fill: #2b3452;
+    --seq1: #f4b75f; --seq1-fill: #45351c;
+    --seq2: #f4801f; --seq2-fill: #4a2d14;
+    --seq3: #f25050; --seq3-fill: #4c1f24;
+    --tooltip-bg: #e8e8ea; --tooltip-ink: #131316;
+    --row-hi: #24242b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--ink);
+    font-family: var(--font-serif); font-size: 15px; line-height: 1.5;
+    padding-block: calc(28px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px));
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; overflow-x: clip; }
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--grid); }
+  a:hover { border-bottom-color: var(--ink); }
+
+  header { margin-bottom: 26px; }
+  h1 { font-size: 38px; font-weight: 700; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; letter-spacing: -.01em; }
+  .sub { color: var(--ink-faint); font-size: 14.5px; margin: 0; }
+  .sub .num { color: var(--ink-soft); }
+
+  .nav { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; margin: 0 0 14px; color: var(--ink-soft); }
+  .nav a { border-bottom-color: transparent; }
+  .nav a:hover, .nav a.on { border-bottom-color: var(--ink); color: var(--ink); }
+  .nav .cnt { font-family: var(--font-mono); font-size: 11.5px; color: var(--seq3); margin-left: 3px; }
+
+  .stat-row { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 26px 0 30px; }
+  .stat-row::before { content: ''; position: absolute; left: -40px; right: -24px; top: 50%; border-top: var(--lw-card) solid var(--ink); opacity: .85; pointer-events: none; }
+  .stat { position: relative; background: var(--card-bg); border: var(--lw-card) solid var(--ink); box-shadow: 3px 4px 10px var(--card-shadow); padding: 12px 14px 11px; }
+  .stat .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 25px; font-weight: 600; line-height: 1; }
+  .stat .v small { font-size: 12px; font-weight: 400; color: var(--ink-faint); margin-left: 3px; }
+  .stat .l { color: var(--ink-soft); font-size: 12.5px; margin-top: 6px; }
+  .stat .d { color: var(--ink-faint); font-size: 11.5px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .stat.hot .v { color: var(--seq3); }
+  .stat.warm .v { color: var(--seq2); }
+
+  .missing { border: var(--lw-content) dashed var(--ink-faint); color: var(--ink-faint); font-style: italic; font-size: 13.5px; padding: 14px 16px; }
+  .missing code { font-family: var(--font-mono); font-style: normal; font-size: 12.5px; }
+  .warnbox { border: var(--lw-card) solid var(--seq2); color: var(--seq2); background: transparent; padding: 10px 14px; font-size: 13px; margin-bottom: 26px; }
+  .warnbox b { display: block; font-size: 12px; letter-spacing: .04em; margin-bottom: 4px; }
+  .warnbox div { font-family: var(--font-mono); font-size: 12px; }
+
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 16px; border: var(--lw-card) solid var(--ink); background: var(--card-bg); box-shadow: 3px 4px 10px var(--card-shadow); padding: 11px 13px; }
+  .fg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fg > .fl { font-size: 12px; color: var(--ink-faint); letter-spacing: .04em; }
+  .chip { font-family: var(--font-serif); font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); background: transparent; border: var(--lw-content) solid var(--grid); border-radius: 0; padding: 2px 9px; cursor: pointer; }
+  .chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .chip.on { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+  .chip .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-left: 3px; }
+  .fsearch, .fsel { font-family: var(--font-serif); font-size: 13px; color: var(--ink); background: var(--canvas); border: var(--lw-content) solid var(--grid); border-radius: 0; padding: 3px 8px; min-width: 150px; }
+  .fsel { min-width: 0; }
+  .fsearch:focus, .fsel:focus { outline: none; border-color: var(--ink); }
+  .btn { font-family: var(--font-serif); font-size: 12.5px; color: var(--ink); background: var(--card-bg); border: var(--lw-card) solid var(--ink); border-radius: 0; padding: 3px 11px; cursor: pointer; }
+  .btn:hover { background: var(--row-hi); }
+  .qmeta { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); margin: 9px 0 0; }
+
+  .tbl { overflow-x: auto; margin-top: 10px; }
+  .tbl.tall { max-height: 72vh; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th { text-align: left; font-weight: 400; color: var(--ink-faint); font-size: 12px; letter-spacing: .04em; border-bottom: var(--lw-card) solid var(--ink); padding: 4px 8px 6px; white-space: nowrap; background: var(--canvas); }
+  .tbl.tall thead th { position: sticky; top: 0; z-index: 2; }
+  td { padding: 6px 8px; border-bottom: var(--lw-grid) solid var(--grid); white-space: nowrap; vertical-align: baseline; }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  td.wrapcell { white-space: normal; min-width: 180px; }
+  tbody tr:hover { background: var(--row-hi); }
+  th.s { cursor: pointer; user-select: none; }
+  th.s:hover { color: var(--ink); }
+  th.s .ar { font-family: var(--font-mono); opacity: 0; }
+  th.s.asc .ar, th.s.desc .ar { opacity: 1; color: var(--ink); }
+
+  .st { font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; }
+  .st::before { content: '● '; }
+  .st.s-done::before, .st.s-test::before, .st.s-interview::before { color: var(--blue); }
+  .st.s-queue::before, .st.s-fill::before { color: var(--seq1); }
+  .st.s-wait::before { color: var(--seq2); }
+  .st.s-wqr::before { color: var(--seq3); }
+  .st.s-skip::before, .st.s-none::before { color: var(--ink-faint); }
+  .st.s-none { color: var(--ink-faint); }
+
+  .dl-hot { color: var(--seq3); font-weight: 600; }
+  .dl-warm { color: var(--seq2); font-weight: 600; }
+  .dl-past { color: var(--ink-faint); }
+  .new-dot { font-family: var(--font-mono); font-size: 10.5px; color: var(--blue); margin-left: 5px; }
+  .tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 0 6px; border: 1px solid var(--ink-faint); border-radius: 2px; color: var(--ink-soft); margin-left: 5px; vertical-align: 1px; white-space: nowrap; }
+  .tag.blue { border-color: var(--blue); color: var(--blue); }
+  .tag.amber { border-color: var(--seq1); color: var(--seq1); }
+  .fit-冲 { color: var(--seq3); font-weight: 700; }
+  .fit-常规 { color: var(--ink); }
+  .fit-练手 { color: var(--ink-soft); }
+  .fit-不合适 { color: var(--ink-faint); }
+  .fit-未判 { color: var(--ink-faint); }
+
+  tr.sub > td { white-space: normal; background: var(--row-hi); padding: 8px 10px; }
+  .subt { width: 100%; font-size: 12.5px; }
+  .subt td { padding: 3px 8px; }
+  .subt th { padding: 2px 8px; border-bottom: var(--lw-grid) solid var(--grid); }
+  .sub-note { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; }
+  .expand { cursor: pointer; color: var(--ink-faint); font-family: var(--font-mono); font-size: 11.5px; user-select: none; }
+  .expand:hover { color: var(--ink); }
+  .more { text-align: center; padding: 12px 0 4px; }
+  .empty-row td { color: var(--ink-faint); font-style: italic; }
+
+  .note { font-style: italic; color: var(--ink-faint); font-size: 14px; text-align: center; margin: 6px 0 0; }
+  footer { color: var(--ink-faint); font-size: 12.5px; margin-top: 44px; border-top: var(--lw-grid) solid var(--grid); padding-top: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  footer .num { color: var(--ink-soft); }
+
+  #tip { position: fixed; pointer-events: none; background: var(--tooltip-bg); color: var(--tooltip-ink); font-family: var(--font-mono); font-size: 12.5px; padding: 5px 9px; border-radius: 4px; transform: translate(-50%, calc(-100% - 12px)); white-space: pre; z-index: 9; opacity: 0; transition: opacity .12s; max-width: 90vw; }
+  #tip.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ---- ≤640px 卡片布局（沿用 dashboard #ptbl 的做法） ---- */
+  @media (max-width: 640px) {
+    body { padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+    h1 { font-size: 30px; }
+    .stat-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-row::before { left: -16px; right: -16px; }
+    .stat .v { font-size: 21px; }
+    .tbl.tall { max-height: none; overflow: visible; }
+    #btbl thead { display: none; }
+    #btbl, #btbl tbody { display: block; }
+    #btbl tr.brow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 12px; position: relative; padding: 10px 2px 10px 26px; border-bottom: var(--lw-grid) solid var(--grid); }
+    #btbl td { border: 0; padding: 0; white-space: normal; min-width: 0; }
+    #btbl td.c-rank { position: absolute; left: 2px; top: 11px; font-size: 11.5px; }
+    #btbl td.c-company { font-weight: 700; flex: 1 1 auto; order: 1; }
+    #btbl td.c-status { order: 2; margin-left: auto; }
+    #btbl td.c-fit { order: 3; } #btbl td.c-tier { order: 4; }
+    #btbl td.c-dl { order: 5; } #btbl td.c-agenda { order: 6; } #btbl td.c-pub { order: 7; }
+    #btbl td.c-roles, #btbl td.c-city { flex: 0 0 100%; min-width: 0; }
+    #btbl td.c-roles { order: 8; } #btbl td.c-city { order: 9; }
+    #btbl td.c-entry { order: 10; } #btbl td.c-jd { order: 11; }
+    #btbl td.c-agenda { font-size: 12.5px; }
+    #btbl td.c-city, #btbl td.c-entry, #btbl td.c-jd { font-size: 12.5px; color: var(--ink-soft); }
+    #btbl td[data-l]::before { content: attr(data-l) ' '; color: var(--ink-faint); font-family: var(--font-serif); font-size: 11.5px; }
+    #btbl tr.sub { display: block; padding: 8px 6px; }
+    #btbl tr.empty-row { display: block; }
+    #btbl tr.empty-row td { display: block; }
+    .fsearch { min-width: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <nav class="nav">/*__NAV__*/</nav>
+  <header>
+    <h1>每日榜单</h1>
+    <p class="sub" id="subtitle"></p>
+  </header>
+
+  <div id="warnings"></div>
+  <div class="stat-row" id="stats"></div>
+
+  <section>
+    <div class="filters" id="filters"></div>
+    <p class="qmeta" id="qmeta"></p>
+    <div class="tbl tall"><table id="btbl"><thead></thead><tbody></tbody></table></div>
+    <div class="more" id="more"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<div id="tip"></div>
+
+<script>
+window.BOARD = /*__DATA__*/;
+</script>
+<script>
+(function(){
+'use strict';
+const D = window.BOARD || {};
+const AS_OF = D.asOf;
+const ROWS = D.rows || [];
+const S = D.stats || {};
+const FV = D.filterVals || {};
+
+const $ = s => document.querySelector(s);
+const tip = $('#tip');
+function showTip(e, text){ tip.textContent = text; tip.classList.add('on'); moveTip(e); }
+function moveTip(e){ tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; }
+function hideTip(){ tip.classList.remove('on'); }
+function bindTip(el, text){ el.addEventListener('mouseenter', e=>showTip(e,text)); el.addEventListener('mousemove', moveTip); el.addEventListener('mouseleave', hideTip); }
+const dayMs = 86400000;
+const d = s => new Date(s + 'T00:00:00');
+const daysLeft = s => Math.round((d(s) - d(AS_OF)) / dayMs);
+const md = s => (s && s.length >= 10) ? s.slice(5) : (s || '—');
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ===== 页头 / 警告 =====
+const SNAP = D._snapshot || {};
+const snapNote = SNAP.historical
+  ? `历史快照 <span class="num">${esc(SNAP.date||'')}</span>（${esc((SNAP.generated_at||'').slice(0,16).replace('T',' '))} 生成）`
+  : (SNAP.live ? '实时构建' : `最新快照 <span class="num">${esc(SNAP.date||'')}</span>`);
+$('#subtitle').innerHTML = `全量公告按雇主合并 · 口径 <span class="num">${esc(D.since||'')}</span> 起 · 公告同步 <span class="num">${esc((D.syncedAt||'').slice(0,16).replace('T',' ')||'—')}</span> · ${snapNote}`;
+if ((D.warnings||[]).length) {
+  $('#warnings').innerHTML = `<div class="warnbox"><b>WARN</b>${D.warnings.map(w=>`<div>${esc(w)}</div>`).join('')}</div>`;
+}
+
+// ===== 统计卡 =====
+const LBL = S.labels || {};
+const sub1 = ['已笔试','面试'].map(k=>LBL[k]?`${k} ${LBL[k]}`:'').filter(Boolean).join(' · ');
+$('#stats').innerHTML = [
+  [S.total||0, '全量公司', `公告 ${S.announcements||0} 条去重`],
+  [S.todayNew||0, '今日新增', `发布日期 = ${md(AS_OF)}`],
+  [S.applied||0, '已投', sub1 || '含已笔试/面试'],
+  [S.running||0, '进行中', `排队 ${LBL['排队']||0} · 填表 ${LBL['填表中']||0}`],
+  [S.waiting||0, '等我处理', `扫码 ${LBL['等我扫码']||0} · 确认 ${LBL['等我确认']||0}`],
+  [S.dueToday||0, '今日截止', '未闭环且今天到期'],
+].map(([v,l,dd],i)=>`<div class="stat${i===5&&v?' hot':i===4&&v?' warm':''}"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div><div class="d">${esc(dd)}</div></div>`).join('');
+
+// ===== 状态 → 样式 =====
+const STCLS = {'未处理':'s-none','排队':'s-queue','填表中':'s-fill','等我扫码':'s-wqr','等我确认':'s-wait',
+               '已投':'s-done','已笔试':'s-test','面试':'s-interview','不合适':'s-skip','跳过':'s-skip'};
+
+// ===== 筛选 / 排序 =====
+const state = { status:new Set(), fit:new Set(), tier:new Set(), entry:'all', city:'all', q:'', sort:'default', dir:1 };
+const SORTS = [['default','默认：未处理→档→截止→分数'],['deadline','截止近'],['published','发布新'],['score','分数高'],['company','公司名']];
+const FITR = {'冲':0,'常规':1,'未判':2,'练手':3,'不合适':4};
+
+const F = $('#filters');
+F.innerHTML = `
+  <div class="fg"><span class="fl">状态</span>${(FV.statuses||[]).map(s=>`<button class="chip" data-st="${esc(s)}">${esc(s)}<span class="n">${LBL[s]||0}</span></button>`).join('')}</div>
+  <div class="fg"><span class="fl">档</span>${(FV.fits||[]).map(s=>`<button class="chip" data-fit="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+  <div class="fg"><span class="fl">层级</span>${(FV.tiers||[]).map(s=>`<button class="chip" data-tier="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+  <div class="fg"><span class="fl">入口</span><select class="fsel" id="f-entry"><option value="all">全部</option>${(FV.entries||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+  <div class="fg"><span class="fl">城市</span><select class="fsel" id="f-city"><option value="all">全部</option>${(FV.cities||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+  <div class="fg"><input class="fsearch" type="search" id="q" placeholder="搜公司 / 岗位 / 标题 / id" autocomplete="off"></div>
+  <div class="fg"><span class="fl">排序</span><select class="fsel" id="f-sort">${SORTS.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></div>
+  <div class="fg"><a class="btn" href="/board.csv${SNAP.historical?('?date='+encodeURIComponent(SNAP.date)):''}">导出 CSV</a><a class="btn" href="/board/diff">对比昨日</a>${(D.dates||[]).length?`<select class="fsel" id="f-date"><option value="">最新</option>${(D.dates||[]).slice().reverse().map(x=>`<option${x===SNAP.date?' selected':''}>${x}</option>`).join('')}</select>`:''}</div>`;
+
+const cols = [
+  {k:'rank',    t:'#',     s:true,  num:true},
+  {k:'company', t:'公司',  s:true},
+  {k:'tier',    t:'层级',  s:true},
+  {k:'fit',     t:'档',    s:true},
+  {k:'roles',   t:'建议岗位', s:false},
+  {k:'city',    t:'城市',  s:true},
+  {k:'deadline',t:'截止',  s:true},
+  {k:'agenda',  t:'日程',  s:false},
+  {k:'published',t:'发布', s:true},
+  {k:'entry',   t:'入口',  s:true},
+  {k:'jd',      t:'JD',    s:true},
+  {k:'status',  t:'我的状态', s:true},
+];
+const thead = $('#btbl thead'), tbody = $('#btbl tbody');
+thead.innerHTML = `<tr>${cols.map(c=>c.s?`<th class="s" data-k="${c.k}">${c.t} <span class="ar">↕</span></th>`:`<th>${c.t}</th>`).join('')}</tr>`;
+
+function dlKey(r){
+  // 未来截止升序在前；已过期的按过期时间倒序垫后；无截止最后
+  if(!r.deadline) return 9e15;
+  const t = d(r.deadline).getTime();
+  return r.deadline < AS_OF ? 9e14 - t/1e6 : t;
+}
+function val(r, k){
+  switch(k){
+    case 'rank': return r.rank;
+    case 'company': return r.company;
+    case 'tier': { const o = FV.tiers||[]; const i = o.indexOf(r.tier); return i<0 ? 99 : i; }
+    case 'fit': return FITR[r.fit] != null ? FITR[r.fit] : 2;
+    case 'city': return r.cities.join(' ');
+    case 'deadline': return dlKey(r);
+    case 'published': return r.published || '';
+    case 'entry': return r.entry;
+    case 'jd': return r.jd;
+    case 'status': { const i = (FV.statuses||[]).indexOf(r.status.label); return i<0 ? 99 : i; }
+    default: return r.rank;
+  }
+}
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return ROWS.filter(r=>{
+    if(state.status.size && !state.status.has(r.status.label)) return false;
+    if(state.fit.size && !state.fit.has(r.fit)) return false;
+    if(state.tier.size && !state.tier.has(r.tier)) return false;
+    if(state.entry!=='all' && r.entry!==state.entry) return false;
+    if(state.city!=='all' && !r.cities.includes(state.city)) return false;
+    if(q){
+      const hay = (r.company+' '+r.subs.join(' ')+' '+r.roles.join(' ')+' '+r.ids.join(' ')
+                   +' '+r.anns.map(a=>a.title).join(' ')).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+function sorted(list){
+  if(state.sort==='default') return list.slice().sort((a,b)=>a.rank-b.rank);
+  const dir = state.dir;
+  return list.slice().sort((a,b)=>{
+    const va = val(a,state.sort), vb = val(b,state.sort);
+    if(va<vb) return -dir; if(va>vb) return dir;
+    return a.rank - b.rank;
+  });
+}
+
+// ===== 行渲染 =====
+const CHUNK = 300;
+let view = [], shown = 0;
+const openSet = new Set();
+
+function dlCell(r){
+  if(!r.deadline) return '<span style="color:var(--ink-faint)">—</span>';
+  const dl = daysLeft(r.deadline);
+  const cls = dl<0 ? 'dl-past' : dl<=3 ? 'dl-hot' : dl<=7 ? 'dl-warm' : '';
+  const tag = dl<0 ? '已过' : `D-${dl}`;
+  return `${md(r.deadline)} <span class="${cls}">${tag}</span>`;
+}
+function companyCell(r){
+  const name = r.link ? `<a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.company)}</a>` : esc(r.company);
+  const exp = `<span class="expand" data-k="${esc(r.key)}">▸</span> `;
+  const sub = r.subs.length ? `<span class="tag" title="${esc(r.subs.join('、'))}">含 ${esc(r.subs[0])}${r.subs.length>1?' 等':''}</span>` : '';
+  return exp + name + (r.isNew?'<span class="new-dot">new</span>':'') + sub;
+}
+function agendaCell(r){
+  const a = r.agenda;
+  if(!a) return '<span style="color:var(--ink-faint)">—</span>';
+  const t = a.when ? a.when.slice(5,10) + (a.date_only ? '' : ' ' + a.when.slice(11,16)) : '待定';
+  const cls = a.status==='已过期' ? 'dl-past'
+            : (a.days!=null && a.days>=0 && a.days<=3 ? 'dl-hot' : a.days!=null && a.days<=7 ? 'dl-warm' : '');
+  const tag = a.status==='已过期' ? '已过' : (a.days!=null && a.days>=0 ? ` D-${a.days}` : '');
+  const inner = `${esc(a.kind)} ${t}${tag}`;
+  return `<a href="/agenda" class="${cls}">${inner}</a>`;
+}
+function rowHtml(r){
+  const st = r.status;
+  const stTxt = st.raw && st.raw!==st.label ? `${st.label}·${st.raw}` : st.label;
+  return `<tr class="brow" data-k="${esc(r.key)}">`
+    + `<td class="num c-rank">${r.rank}</td>`
+    + `<td class="c-company">${companyCell(r)}</td>`
+    + `<td class="c-tier" data-l="层级">${esc(r.tier)}</td>`
+    + `<td class="c-fit" data-l="档"><span class="fit-${esc(r.fit)}">${esc(r.fit)}</span>${r.fitScore?` <span class="num" style="color:var(--ink-faint);font-size:11px">${r.fitScore}</span>`:''}</td>`
+    + `<td class="wrapcell c-roles" data-l="岗位">${esc(r.roles.join('、'))||'<span style="color:var(--ink-faint)">—</span>'}</td>`
+    + `<td class="c-city" data-l="城市">${r.cities.length?esc(r.cities.slice(0,4).join('、')):'<span style="color:var(--ink-faint)">—</span>'}${r.cities.length>4?` <span style="color:var(--ink-faint)">+${r.cities.length-4}</span>`:''}</td>`
+    + `<td class="num c-dl" data-l="截止">${dlCell(r)}</td>`
+    + `<td class="num c-agenda" data-l="日程">${agendaCell(r)}</td>`
+    + `<td class="num c-pub" data-l="发布">${md(r.published)}</td>`
+    + `<td class="c-entry" data-l="入口">${r.apply?`<a href="${esc(r.apply)}" target="_blank" rel="noopener">${esc(r.entry)}</a>`:esc(r.entry)}${r.mails.length?` <span class="tag">${r.mails.length}邮箱</span>`:''}</td>`
+    + `<td class="num c-jd" data-l="JD">${esc(r.jd)}</td>`
+    + `<td class="st ${STCLS[st.label]||'s-none'} c-status" data-l="状态" data-raw="${esc(st.raw||'')}">${esc(stTxt)}</td></tr>`;
+}
+function subHtml(r){
+  const inner = r.anns.map(a=>{
+    const dl = a.exp ? `截止 ${a.exp}` : '';
+    const links = [a.link?`<a href="${esc(a.link)}" target="_blank" rel="noopener">公告</a>`:'',
+                   a.apply?`<a href="${esc(a.apply)}" target="_blank" rel="noopener">投递</a>`:''].filter(Boolean).join(' · ');
+    return `<tr><td class="num">${esc(a.id)}</td><td class="wrapcell">${esc(a.title)}</td>`
+      + `<td class="num">${esc(md(a.pub))}</td><td class="num">${esc(a.exp?md(a.exp):'—')}</td>`
+      + `<td>${esc(a.entry)}${a.mails.length?` ${esc(a.mails.join('; '))}`:''}</td>`
+      + `<td class="num">${esc(a.jd)}</td><td>${esc(a.fit||'')}</td><td>${esc(a.st||'')}</td><td>${links}</td></tr>`;
+  }).join('');
+  const meta = [
+    r.status.raw ? `状态口径：${esc(r.status.raw)}（来源 ${esc(r.status.src)}）` : '',
+    r.reasons.length ? `判断：${esc(r.reasons.join('；'))}` : '',
+    r.risks.length ? `风险：${esc(r.risks.join('；'))}` : '',
+    r.score ? `score ${r.score}` : '',
+  ].filter(Boolean).join(' · ');
+  return `<tr class="sub"><td colspan="${cols.length}"><table class="subt">`
+    + `<tr><th>id</th><th>标题</th><th>发布</th><th>截止</th><th>入口</th><th>JD</th><th>档</th><th>状态</th><th>链接</th></tr>${inner}</table>`
+    + (meta?`<div class="sub-note">${meta}</div>`:'') + `</td></tr>`;
+}
+
+function renderMore(){
+  const end = Math.min(shown + CHUNK, view.length);
+  let html = '';
+  for(let i=shown;i<end;i++){
+    const r = view[i];
+    html += rowHtml(r);
+    if(openSet.has(r.key)) html += subHtml(r);
+  }
+  tbody.insertAdjacentHTML('beforeend', html);
+  shown = end;
+  $('#more').innerHTML = shown < view.length
+    ? `<button class="btn" id="loadmore">继续加载（还有 ${view.length-shown} 家）</button>` : '';
+  const lm = $('#loadmore');
+  if(lm) lm.addEventListener('click', renderMore);
+}
+function render(){
+  view = sorted(filtered());
+  shown = 0;
+  tbody.innerHTML = view.length ? '' : `<tr class="empty-row"><td colspan="${cols.length}">没有符合条件的公司</td></tr>`;
+  renderMore();
+  $('#qmeta').textContent = `显示 ${view.length} / ${ROWS.length} 家 · 默认排序 = 未处理优先 → 档 → 截止近 → 分数`;
+  thead.querySelectorAll('th.s').forEach(th=>{
+    th.classList.toggle('asc', th.dataset.k===state.sort && state.dir===1);
+    th.classList.toggle('desc', th.dataset.k===state.sort && state.dir===-1);
+    const ar = th.querySelector('.ar'); if(ar) ar.textContent = th.dataset.k===state.sort ? (state.dir===1?'↑':'↓') : '↕';
+  });
+}
+
+// ===== 事件 =====
+F.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click', ()=>{
+  const k = b.dataset.st;
+  if(state.status.has(k)) state.status.delete(k); else state.status.add(k);
+  b.classList.toggle('on', state.status.has(k)); render();
+}));
+F.querySelectorAll('[data-fit]').forEach(b=>b.addEventListener('click', ()=>{
+  const k = b.dataset.fit;
+  if(state.fit.has(k)) state.fit.delete(k); else state.fit.add(k);
+  b.classList.toggle('on', state.fit.has(k)); render();
+}));
+F.querySelectorAll('[data-tier]').forEach(b=>b.addEventListener('click', ()=>{
+  const k = b.dataset.tier;
+  if(state.tier.has(k)) state.tier.delete(k); else state.tier.add(k);
+  b.classList.toggle('on', state.tier.has(k)); render();
+}));
+$('#f-entry').addEventListener('change', e=>{ state.entry = e.target.value; render(); });
+$('#f-city').addEventListener('change', e=>{ state.city = e.target.value; render(); });
+$('#f-sort').addEventListener('change', e=>{ state.sort = e.target.value; state.dir = state.sort==='published' ? -1 : 1; render(); });
+$('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
+const fdate = $('#f-date');
+if(fdate) fdate.addEventListener('change', e=>{ location.href = e.target.value ? `/board?date=${e.target.value}` : '/board'; });
+
+thead.addEventListener('click', e=>{
+  const th = e.target.closest('th.s'); if(!th) return;
+  const k = th.dataset.k;
+  if(k==='rank'){ state.sort='default'; $('#f-sort').value='default'; render(); return; }
+  if(state.sort===k) state.dir = -state.dir;
+  else { state.sort = k; state.dir = (k==='published') ? -1 : 1; }
+  $('#f-sort').value = 'default';   // 表头排序独立于预设
+  render();
+});
+tbody.addEventListener('click', e=>{
+  const x = e.target.closest('.expand'); if(!x) return;
+  const key = x.dataset.k;
+  const tr = x.closest('tr');
+  if(openSet.has(key)){
+    openSet.delete(key);
+    const nxt = tr.nextElementSibling;
+    if(nxt && nxt.classList.contains('sub')) nxt.remove();
+    x.textContent = '▸';
+  } else {
+    openSet.add(key);
+    const r = ROWS.find(r=>r.key===key);
+    tr.insertAdjacentHTML('afterend', subHtml(r));
+    x.textContent = '▾';
+  }
+});
+// tooltip：状态列显示原始口径
+tbody.addEventListener('mouseover', e=>{
+  const td = e.target.closest('td.c-status');
+  if(td && td.dataset.raw && td.dataset.raw !== td.textContent) bindTip(td, td.dataset.raw);
+});
+
+$('#foot').innerHTML = `<span>真源：${(D.sources||[]).map(s=>`<span class="num">${esc(s.path)}</span>${s.ok?'':'（缺失）'}`).join(' · ')}</span>`
+  + `<span>生成于 <span class="num">${esc(D.generatedAt||'')}</span> · campus-apply web</span>`;
+render();
+})();
+</script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));</script>

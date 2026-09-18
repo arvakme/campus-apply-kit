@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131316">
+<title>连不上面板</title>
+<style>
+  :root {
+    --canvas: #fdfdfc; --card-bg: #ffffff; --card-shadow: rgba(30,33,44,.14);
+    --ink: #1d1d1f; --ink-soft: #6a6f7a; --ink-faint: #9aa0ac;
+    --grid: #c9cdd6; --blue: #4263eb;
+    --font-serif: Charter, Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Times New Roman', serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --lw-card: 1.5px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --canvas: #131316; --card-bg: #1c1c21; --card-shadow: rgba(0,0,0,.5);
+      --ink: #e8e8ea; --ink-soft: #9aa0ac; --ink-faint: #6a6f7a;
+      --grid: #34363d; --blue: #748ffc;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; background: var(--canvas); color: var(--ink);
+         font-family: var(--font-serif); font-size: 15px; line-height: 1.5;
+         display: grid; place-items: center; padding: 24px;
+         padding-top: calc(24px + env(safe-area-inset-top, 0px));
+         padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .box { max-width: 420px; background: var(--card-bg); border: var(--lw-card) solid var(--ink);
+         box-shadow: 3px 4px 10px var(--card-shadow); padding: 26px 24px 22px; }
+  h1 { font-size: 24px; margin: 0 0 10px; letter-spacing: -.01em; }
+  p { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 18px; }
+  code { font-family: var(--font-mono); font-size: 13px; }
+  .btn { font-family: var(--font-serif); font-size: 14px; color: var(--blue); font-weight: 700;
+         background: var(--card-bg); border: var(--lw-card) solid var(--blue); border-radius: 0;
+         padding: 6px 18px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>连不上面板</h1>
+    <p>检查 tailnet 是否连着（Tailscale / sing-box 在线、能到 <code>&lt;机器名&gt;.&lt;tailnet&gt;.ts.net</code>），然后重试。</p>
+    <button class="btn" onclick="location.reload()">重试</button>
+  </div>
+</body>
+</html>

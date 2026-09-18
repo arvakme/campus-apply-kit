@@ -1,0 +1,697 @@
+<!-- web/app/templates/dashboard.html：由 web 容器请求时注入数据 -->
+<meta charset="utf-8">
+<title>秋招作战地图</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="秋招">
+<style>
+  :root {
+    --canvas: #fdfdfc; --card-bg: #ffffff; --card-shadow: rgba(30,33,44,.14);
+    --ink: #1d1d1f; --ink-soft: #6a6f7a; --ink-faint: #9aa0ac;
+    --grid: #c9cdd6; --line-strong: #55595f;
+    --blue: #4263eb; --blue-fill: #dbe2fb;
+    --seq1: #f1ac4b; --seq1-fill: #fbe8cd;
+    --seq2: #e16919; --seq2-fill: #f8dcc6;
+    --seq3: #e03131; --seq3-fill: #f9d4dd;
+    --tooltip-bg: #1d1d1f; --tooltip-ink: #fdfdfc;
+    --row-hi: #f2f3f6;
+    --font-serif: Charter, Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Times New Roman', serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --lw-card: 1.5px; --lw-content: 1.25px; --lw-grid: .8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #131316; --card-bg: #1c1c21; --card-shadow: rgba(0,0,0,.5);
+      --ink: #e8e8ea; --ink-soft: #9aa0ac; --ink-faint: #6a6f7a;
+      --grid: #34363d; --line-strong: #b9bdc6;
+      --blue: #748ffc; --blue-fill: #2b3452;
+      --seq1: #f4b75f; --seq1-fill: #45351c;
+      --seq2: #f4801f; --seq2-fill: #4a2d14;
+      --seq3: #f25050; --seq3-fill: #4c1f24;
+      --tooltip-bg: #e8e8ea; --tooltip-ink: #131316;
+      --row-hi: #24242b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #131316; --card-bg: #1c1c21; --card-shadow: rgba(0,0,0,.5);
+    --ink: #e8e8ea; --ink-soft: #9aa0ac; --ink-faint: #6a6f7a;
+    --grid: #34363d; --line-strong: #b9bdc6;
+    --blue: #748ffc; --blue-fill: #2b3452;
+    --seq1: #f4b75f; --seq1-fill: #45351c;
+    --seq2: #f4801f; --seq2-fill: #4a2d14;
+    --seq3: #f25050; --seq3-fill: #4c1f24;
+    --tooltip-bg: #e8e8ea; --tooltip-ink: #131316;
+    --row-hi: #24242b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--ink);
+    font-family: var(--font-serif); font-size: 15px; line-height: 1.5;
+    padding-block: calc(28px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px));
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; overflow-x: clip; }   /* 只夹住统计卡贯穿线的出血，不产生横向滚动 */
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--grid); }
+  a:hover { border-bottom-color: var(--ink); }
+
+  /* ---- header ---- */
+  header { margin-bottom: 26px; }
+  h1 { font-size: 38px; font-weight: 700; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; letter-spacing: -.01em; }
+  .sub { color: var(--ink-faint); font-size: 14.5px; margin: 0; }
+  .sub .num { color: var(--ink-soft); }
+
+  /* ---- stat row with through-line ---- */
+  .stat-row { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 30px 0 34px; }
+  .stat-row::before { content: ''; position: absolute; left: -40px; right: -24px; top: 50%; border-top: var(--lw-card) solid var(--ink); opacity: .85; pointer-events: none; }
+  .stat { position: relative; background: var(--card-bg); border: var(--lw-card) solid var(--ink); box-shadow: 3px 4px 10px var(--card-shadow); padding: 14px 16px 12px; }
+  .stat .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 27px; font-weight: 600; line-height: 1; }
+  .stat .l { color: var(--ink-soft); font-size: 13px; margin-top: 7px; }
+  .stat .d { color: var(--ink-faint); font-size: 12px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .stat .v small { font-size: 13px; font-weight: 400; color: var(--ink-faint); margin-left: 4px; }
+
+  /* ---- sections ---- */
+  section { margin-bottom: 34px; }
+  h2 { font-size: 18.5px; font-weight: 700; margin: 0 0 13px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h2 .hint { font-weight: 400; font-size: 13px; color: var(--ink-faint); font-style: italic; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; gap: 28px; } .stat-row { grid-template-columns: 1fr 1fr; } .stat-row::before { left: -16px; right: -16px; } h1 { font-size: 30px; } body { padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); } }
+
+  /* ---- placeholder ---- */
+  .missing { border: var(--lw-content) dashed var(--ink-faint); color: var(--ink-faint); font-style: italic; font-size: 13.5px; padding: 14px 16px; }
+  .missing code { font-family: var(--font-mono); font-style: normal; font-size: 12.5px; }
+  .warnbox { border: var(--lw-card) solid var(--seq2); color: var(--seq2); background: transparent; padding: 10px 14px; font-size: 13px; margin-bottom: 26px; }
+  .warnbox b { display: block; font-size: 12px; letter-spacing: .04em; margin-bottom: 4px; }
+  .warnbox div { font-family: var(--font-mono); font-size: 12px; }
+
+  /* ---- funnel strip ---- */
+  .funnel { display: grid; grid-template-columns: repeat(5, 1fr); position: relative; padding: 12px 0 6px; }
+  .funnel::before { content: ''; position: absolute; left: 6%; right: 6%; top: 40px; border-top: var(--lw-content) solid var(--line-strong); }
+  .stage { text-align: center; position: relative; }
+  .stage .dot { width: 12px; height: 12px; border-radius: 50%; border: var(--lw-card) solid var(--ink); background: var(--canvas); margin: 0 auto 10px; position: relative; top: 2px; }
+  .stage.on .dot { background: var(--blue); border-color: var(--blue); }
+  .stage.empty .dot { border-style: dashed; border-color: var(--ink-faint); }
+  .stage .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 600; line-height: 1.1; }
+  .stage.empty .v { color: var(--ink-faint); }
+  .stage .l { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .stage .c { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); position: absolute; top: 26px; right: -22px; }
+  @media (max-width: 640px) { .stage .c { display: none; } .stage .v { font-size: 19px; } }
+
+  /* ---- horizontal bars ---- */
+  .bars { display: grid; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 56px 1fr; align-items: center; gap: 10px; cursor: default; }
+  .bar-row .lbl { font-size: 14px; color: var(--ink); text-align: right; }
+  .bar-row .track { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .bar-row .bar { height: 17px; border: var(--lw-card) solid var(--blue); background: var(--blue-fill); border-radius: 2px; flex: 0 0 auto; transition: width .2s; }
+  .bar-row.muted .bar { border-color: var(--ink-faint); background: transparent; border-style: dashed; }
+  .bar-row .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  .bar-row:hover .bar { border-color: var(--ink); }
+
+  /* ---- rhythm chart ---- */
+  .rhythm { position: relative; }
+  .rhythm svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .rhythm text { font-family: var(--font-mono); font-variant-numeric: tabular-nums; fill: var(--ink-faint); font-size: 11px; }
+  .rhythm .axis { stroke: var(--ink-faint); stroke-width: 2.5; }
+  .rhythm .col { fill: var(--blue-fill); stroke: var(--blue); stroke-width: 1.5; }
+  .rhythm .col.future { fill: none; stroke: var(--grid); stroke-dasharray: 3 3; }
+  .rhythm .val { fill: var(--ink); font-size: 12.5px; font-weight: 600; }
+  .rhythm .ref { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 5 4; }
+  .rhythm .reflbl { fill: var(--ink-soft); font-family: var(--font-serif); font-style: italic; font-size: 12px; }
+  .rhythm .ddl { fill: var(--seq2); }
+  .rhythm .ddl.done { fill: var(--grid); }
+  .rhythm .hit { fill: transparent; cursor: default; }
+  .rhythm .today { stroke: var(--ink); stroke-width: 1; }
+  .rhythm .todaylbl { fill: var(--ink); font-family: var(--font-serif); font-size: 12px; }
+
+  /* ---- deadline / action list ---- */
+  .todo { display: grid; gap: 0; border-top: var(--lw-grid) solid var(--grid); }
+  .todo .row { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: baseline; padding: 9px 0; border-bottom: var(--lw-grid) solid var(--grid); }
+  .todo .dd { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
+  .todo .dd.hot { color: var(--seq3); }
+  .todo .dd.warm { color: var(--seq2); }
+  .todo .who { min-width: 0; }
+  .todo .who b { font-weight: 700; }
+  .todo .who span { color: var(--ink-soft); font-size: 13.5px; }
+  .todo .what { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  .todo .row.xp .dd, .todo .row.xp .who, .todo .row.xp .what { color: var(--ink-faint); }
+  .todo .row.xp .who b { color: var(--ink-faint); font-weight: 400; }
+  .tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border: 1px solid var(--ink-faint); border-radius: 2px; color: var(--ink-soft); margin-left: 6px; vertical-align: 1px; }
+  .tag.hot { border-color: var(--seq3); color: var(--seq3); }
+  .tag.warm { border-color: var(--seq2); color: var(--seq2); }
+  .tag.blue { border-color: var(--blue); color: var(--blue); }
+  .tag.amber { border-color: var(--seq1); color: var(--seq1); }
+  @media (max-width: 640px) { .todo .row { grid-template-columns: 56px 1fr; } .todo .what { grid-column: 2; white-space: normal; } }
+
+  /* ---- portals ---- */
+  .portals { display: flex; flex-wrap: wrap; gap: 8px 10px; }
+  .portal { display: inline-flex; align-items: baseline; gap: 6px; border: var(--lw-card) solid var(--ink); padding: 4px 10px; background: var(--card-bg); font-size: 13.5px; }
+  .portal .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: 12.5px; }
+
+  /* ---- tables ---- */
+  details summary { cursor: pointer; font-size: 14px; color: var(--ink-soft); list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▸ '; color: var(--ink-faint); }
+  details[open] summary::before { content: '▾ '; }
+  .tbl { overflow-x: auto; margin-top: 10px; }
+  .tbl.tall { max-height: 620px; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th { text-align: left; font-weight: 400; color: var(--ink-faint); font-size: 12px; letter-spacing: .04em; border-bottom: var(--lw-card) solid var(--ink); padding: 4px 8px 6px; white-space: nowrap; background: var(--canvas); }
+  .tbl.tall thead th { position: sticky; top: 0; z-index: 2; }
+  td { padding: 6px 8px; border-bottom: var(--lw-grid) solid var(--grid); white-space: nowrap; vertical-align: baseline; }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  td.wrapcell { white-space: normal; min-width: 220px; }
+  tbody tr:hover { background: var(--row-hi); }
+  th.s { cursor: pointer; user-select: none; }
+  th.s:hover { color: var(--ink); }
+  th.s .ar { font-family: var(--font-mono); opacity: 0; }
+  th.s.asc .ar, th.s.desc .ar { opacity: 1; color: var(--ink); }
+  .st { font-family: var(--font-mono); font-size: 11.5px; }
+  .st::before { content: '● '; }
+  .st.s-applied::before { color: var(--blue); }
+  .st.s-form::before { color: var(--seq1); }
+  .st.s-hold::before { color: var(--ink-faint); }
+  tr.done td { color: var(--ink-faint); }
+  tr.done td a { color: var(--ink-faint); }
+  .dl-hot { color: var(--seq3); font-weight: 600; }
+  .dl-warm { color: var(--seq2); font-weight: 600; }
+  .mailmark { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); }
+  .mailmark.no { color: var(--ink-faint); }
+
+  /* ---- candidate queue controls ---- */
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; border: var(--lw-card) solid var(--ink); background: var(--card-bg); box-shadow: 3px 4px 10px var(--card-shadow); padding: 11px 13px; }
+  .fg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fg > .fl { font-size: 12px; color: var(--ink-faint); letter-spacing: .04em; }
+  .chip { font-family: var(--font-serif); font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); background: transparent; border: var(--lw-content) solid var(--grid); border-radius: 0; padding: 2px 9px; cursor: pointer; }
+  .chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .chip.on { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+  .fsearch { font-family: var(--font-serif); font-size: 13px; color: var(--ink); background: var(--canvas); border: var(--lw-content) solid var(--grid); border-radius: 0; padding: 3px 8px; min-width: 160px; }
+  .fsearch:focus { outline: none; border-color: var(--ink); }
+  .toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink-soft); cursor: pointer; }
+  .btn { font-family: var(--font-serif); font-size: 12.5px; color: var(--ink); background: var(--card-bg); border: var(--lw-card) solid var(--ink); border-radius: 0; padding: 3px 11px; cursor: pointer; }
+  .btn:hover { background: var(--row-hi); }
+  .btn:disabled { color: var(--ink-faint); border-color: var(--grid); cursor: default; background: transparent; }
+  .qmeta { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); margin: 9px 0 0; }
+  .copybox { margin-top: 10px; border: var(--lw-content) dashed var(--ink-faint); padding: 9px 11px; }
+  .copybox p { margin: 0 0 6px; font-size: 12.5px; color: var(--ink-soft); }
+  .copybox textarea { width: 100%; min-height: 60px; font-family: var(--font-mono); font-size: 12px; color: var(--ink); background: var(--canvas); border: var(--lw-content) solid var(--grid); border-radius: 0; padding: 6px; resize: vertical; }
+  .cbx { accent-color: var(--blue); }
+  .empty-row td { color: var(--ink-faint); font-style: italic; }
+
+  /* ---- 站内导航（web 版新增） ---- */
+  .nav { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13.5px; margin: 0 0 14px; color: var(--ink-soft); }
+  .nav a { border-bottom-color: transparent; }
+  .nav a:hover, .nav a.on { border-bottom-color: var(--ink); color: var(--ink); }
+  .nav .cnt { font-family: var(--font-mono); font-size: 11.5px; color: var(--seq3); margin-left: 3px; }
+
+  /* ---- 候选表窄屏改卡片（web 版新增） ---- */
+  @media (max-width: 640px) {
+    .tbl.tall { max-height: none; overflow: visible; }
+    #ptbl thead { display: none; }
+    #ptbl, #ptbl tbody { display: block; }
+    #ptbl tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 12px; position: relative; padding: 10px 2px 10px 28px; border-bottom: var(--lw-grid) solid var(--grid); }
+    #ptbl td { border: 0; padding: 0; white-space: normal; min-width: 0; }
+    #ptbl td.c-sel { position: absolute; left: 2px; top: 11px; }
+    #ptbl td.c-company { font-weight: 700; flex: 1 1 auto; order: 1; }
+    #ptbl td.c-score { margin-left: auto; order: 2; }
+    #ptbl td.c-title { order: 3; } #ptbl td.c-kw { order: 4; } #ptbl td.c-cat { order: 5; } #ptbl td.c-exp { order: 6; }
+    #ptbl td.c-mail { order: 7; } #ptbl td.c-board { order: 8; } #ptbl td.c-id { order: 9; }
+    #ptbl td.c-title, #ptbl td.c-kw { flex: 0 0 100%; min-width: 0; }
+    #ptbl td.c-kw, #ptbl td.c-cat, #ptbl td.c-exp, #ptbl td.c-mail, #ptbl td.c-board, #ptbl td.c-id { font-size: 12.5px; color: var(--ink-soft); }
+    #ptbl td[data-l]::before { content: attr(data-l) ' '; color: var(--ink-faint); font-family: var(--font-serif); font-size: 11.5px; }
+    #ptbl tr.empty-row { display: block; }
+    #ptbl tr.empty-row td { display: block; }
+    .fsearch { min-width: 0; width: 100%; }
+  }
+
+  .note { font-style: italic; color: var(--ink-faint); font-size: 14px; text-align: center; margin: 6px 0 0; }
+  footer { color: var(--ink-faint); font-size: 12.5px; margin-top: 44px; border-top: var(--lw-grid) solid var(--grid); padding-top: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  footer .num { color: var(--ink-soft); }
+
+  /* ---- tooltip ---- */
+  #tip { position: fixed; pointer-events: none; background: var(--tooltip-bg); color: var(--tooltip-ink); font-family: var(--font-mono); font-size: 12.5px; padding: 5px 9px; border-radius: 4px; transform: translate(-50%, calc(-100% - 12px)); white-space: pre; z-index: 9; opacity: 0; transition: opacity .12s; max-width: 90vw; }
+  #tip.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <nav class="nav"><a href="/" class="on">看板</a><a href="/board">榜单</a><a href="/agenda">日程</a><a href="/bank">问题库</a><a href="/setup">前置条件</a><a href="/handoffs">待我处理<span class="cnt" id="hcnt"></span></a></nav>
+  <header>
+    <h1>秋招作战地图</h1>
+    <p class="sub" id="subtitle"></p>
+  </header>
+
+  <div id="warnings"></div>
+  <div class="stat-row" id="stats"></div>
+
+  <section>
+    <h2>我的日程 <span class="hint" id="agenda-hint"></span></h2>
+    <div class="todo" id="agenda"></div>
+  </section>
+
+  <section>
+    <h2>漏斗 <span class="hint">从候选池到 Offer，节点间为转化率</span></h2>
+    <div class="funnel" id="funnel"></div>
+  </section>
+
+  <section>
+    <h2>投递节奏 <span class="hint">每日已投家数，▲ 为截止日，虚线为目标 <span class="num" id="tgt"></span> 家/日</span></h2>
+    <div class="rhythm" id="rhythm"></div>
+    <p class="note" id="rhythm-note"></p>
+  </section>
+
+  <section>
+    <h2>近期待办 <span class="hint">未投递的截止 + 已投递的笔试 / 测评 + 在跑批次阻塞项</span></h2>
+    <div class="todo" id="todo"></div>
+  </section>
+
+  <section>
+    <h2 id="batch-h">在跑批次</h2>
+    <div id="batch"></div>
+  </section>
+
+  <section>
+    <h2>候选队列 <span class="hint" id="pool-hint"></span></h2>
+    <div id="pool"></div>
+  </section>
+
+  <section>
+    <h2>邮件队列 <span class="hint">由邮件 bot 统一发送，worker 只入队</span></h2>
+    <div id="email"></div>
+  </section>
+
+  <div class="two">
+    <section>
+      <h2>层级分布 <span class="hint" id="layer-hint"></span></h2>
+      <div class="bars" id="layers"></div>
+    </section>
+    <section>
+      <h2>投递城市 <span class="hint">按岗位所在地</span></h2>
+      <div class="bars" id="cities"></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>门户分布 <span class="hint">同一 ATS 账号可复用，决定下一批的顺手程度</span></h2>
+    <div class="portals" id="portals"></div>
+  </section>
+
+  <section>
+    <details>
+      <summary id="detail-summary">全部明细</summary>
+      <div class="tbl"><table id="tbl"></table></div>
+    </details>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<div id="tip"></div>
+
+<script>
+window.DATA = /*__DATA__*/;   // web/app/dashboard.py 用 JSON 替换上面的占位；模板本身不可直接打开
+</script>
+<script>
+(function(){
+'use strict';
+const D = window.DATA || {};
+const AS_OF = D.asOf;
+const TARGET_PER_DAY = D.targetPerDay || 8;
+const C = D.companies || [];
+const POOL = D.pool || {missing:true, total:0, rows:[], fields:[]};
+
+// ===== 工具 =====
+const $ = s => document.querySelector(s);
+const tip = $('#tip');
+function showTip(e, text){ tip.textContent = text; tip.classList.add('on'); moveTip(e); }
+function moveTip(e){ tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; }
+function hideTip(){ tip.classList.remove('on'); }
+function bindTip(el, text){ el.addEventListener('mouseenter', e=>showTip(e,text)); el.addEventListener('mousemove', moveTip); el.addEventListener('mouseleave', hideTip); }
+const dayMs = 86400000;
+const d = s => new Date(s + 'T00:00:00');
+const daysLeft = s => Math.round((d(s) - d(AS_OF)) / dayMs);
+const md = s => (s && s.length >= 10) ? s.slice(5) : (s || '');
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function count(arr, key){ const m = new Map(); arr.forEach(x=>{ const k = key(x); m.set(k, (m.get(k)||[]).concat(x)); }); return m; }
+function missing(text, file){ return `<div class="missing">数据缺失：${esc(text)}${file ? ' · <code>' + esc(file) + '</code>' : ''}</div>`; }
+function dlCls(days){ return days == null ? '' : days <= 3 ? 'dl-hot' : days <= 7 ? 'dl-warm' : ''; }
+
+// ===== 页头 / 警告 =====
+$('#subtitle').innerHTML = `${esc(D.owner || '')} · 数据截至 <span class="num">${esc(D.generatedAt || '')}</span> · 由 <span class="num">${esc((D.sources||[]).map(s=>s.path).join(' + '))}</span> 生成`;
+$('#tgt').textContent = TARGET_PER_DAY;
+$('#rhythm-note').textContent = D.rhythmNote || '';
+if ((D.warnings||[]).length) {
+  $('#warnings').innerHTML = `<div class="warnbox"><b>WARN</b>${D.warnings.map(w=>`<div>${esc(w)}</div>`).join('')}</div>`;
+}
+
+// ===== 统计卡 =====
+const isApplied = c => c.statusCls === 's-applied';
+const isHold    = c => c.statusCls === 's-hold';
+const applied = C.filter(isApplied);
+const running = C.filter(c => !isApplied(c) && !isHold(c));
+const AG_OPEN = ((D.agenda && D.agenda.items) || []).filter(i => i.status !== '已完成' && i.status !== '已过期');
+const agTests = AG_OPEN.filter(i => (i.aids||[]).length && (/assessment|written|test|interview/.test(i.kind_key||'') || /测评|笔试|面试/.test(i.kind||'')))
+  .filter((i, k, arr) => arr.findIndex(j => j.company === i.company && j.kind === i.kind) === k);   // 只认挂了公告 id 的（排掉 GitHub 等误抽），同公司同类型去重
+const tests   = C.filter(c => isApplied(c) && c.next).concat(agTests.filter(i => !C.some(c => isApplied(c) && c.next && c.name === i.company)).map(i => ({name: i.company, next: i.kind})));
+const poolTxt = POOL.missing ? '—' : POOL.total.toLocaleString();
+const firstDay = applied.map(c=>c.applied).filter(Boolean).sort()[0];
+$('#stats').innerHTML = [
+  [applied.length, '已投递', firstDay ? `${md(firstDay)} 开投，共 ${new Set(applied.map(c=>c.applied).filter(Boolean)).size} 个投递日` : '投递日未记'],
+  (D.slots ? [D.slots.length, '在跑', D.slots.map(x=>'槽'+x.slot+' '+x.company).join(' · ') || '无（投递池空闲）'] : [running.length, '在跑', running.map(c=>c.name.replace(/[（(].*?[)）]/,'')).join(' · ') || '无']),
+  [tests.length, '待笔试 / 测评', tests.map(c=>c.name).join(' · ') || '无'],
+  [poolTxt, '候选池', POOL.missing ? 'battle-map.md 缺失' : '公司去重后的待投队列'],
+].map(([v,l,dd])=>`<div class="stat"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div><div class="d">${esc(dd)}</div></div>`).join('');
+
+// ===== 我的日程（置顶：合并 next-steps + assessments.md + tracker） =====
+(function(){
+  const AG = (D.agenda && D.agenda.items) || [];
+  const act = AG.filter(i=>i.status!=='已完成');
+  const soon = act.filter(i=>i.days!=null && i.days>=0 && i.days<=7).length;
+  $('#agenda-hint').innerHTML = `共 <span class="num">${act.length}</span> 条`
+    + (soon ? ` · ≤7 天 <span class="num">${soon}</span> 条` : '')
+    + ` · <a href="/agenda">全部 / 标记完成 →</a>`;
+  const fmtWhen = it => it.when ? it.when.slice(5,10) + (it.date_only ? '' : ' ' + it.when.slice(11,16)) : '';
+  const ddOf = it => it.status==='已过期' ? '已过' : it.days==null ? '待定' : `D-${it.days}`;
+  const ddCls = it => it.status==='已过期' || it.days==null || it.days<0 ? '' : it.days<=3 ? 'hot' : it.days<=7 ? 'warm' : '';
+  if(!act.length){
+    $('#agenda').innerHTML = `<div class="row"><div class="dd">—</div><div class="who"><span>暂无日程${AG.length?'（全部已完成）':''} · 来源 state/next-steps.jsonl + assessments.md + tracker.md</span></div><div class="what"></div></div>`;
+    return;
+  }
+  const top = act.slice(0, 8);
+  const rowHtml = it => `<div class="row${it.status==='已过期'?' xp':''}">`
+    + `<div class="dd ${ddCls(it)}">${ddOf(it)}</div>`
+    + `<div class="who"><b>${esc(it.company)}</b> <span class="tag">${esc(it.kind)}</span> <span>${esc(it.action || it.kind)}${it.link?` <a href="${esc(it.link)}" target="_blank" rel="noopener">入口</a>`:''}</span></div>`
+    + `<div class="what">${fmtWhen(it) ? esc(fmtWhen(it)) + ' · ' : ''}${esc(it.status)} <span style="opacity:.65">${esc((it.sources||[]).join('+'))}</span></div></div>`;
+  $('#agenda').innerHTML = top.map(rowHtml).join('')
+    + (act.length > top.length
+       ? `<div class="row"><div class="dd"></div><div class="who"><span>还有 <span class="num">${act.length-top.length}</span> 条 → <a href="/agenda">/agenda</a></span></div><div class="what"></div></div>`
+       : '');
+})();
+
+// ===== 漏斗 =====
+const stages = [['候选池', POOL.missing ? 0 : POOL.total], ['已投递', applied.length], ['笔试/测评', tests.length], ['面试', D.interviews||0], ['Offer', D.offers||0]];
+$('#funnel').innerHTML = stages.map(([l,v],i)=>{
+  const next = stages[i+1] ? stages[i+1][1] : undefined;
+  let conv = '';
+  if (i < stages.length-1) {
+    if (v && next) { const p = next/v*100; conv = (p<1 ? p.toFixed(1) : Math.round(p)) + '%→'; }
+    else conv = '→';
+  }
+  const cls = v>0 ? 'on' : 'empty';
+  return `<div class="stage ${cls}"><div class="dot"></div><div class="v">${v.toLocaleString()}</div><div class="l">${l}</div>${conv?`<div class="c">${conv}</div>`:''}</div>`;
+}).join('');
+
+// ===== 节奏图 =====
+(function(){
+  const days = 18;                                  // 今天前 10 天 … 后 7 天
+  const start = new Date(d(AS_OF).getTime() - 10*dayMs);
+  const W = 1040, H = 168, padL = 14, padR = 14, base = 112, top = 22;
+  const slot = (W - padL - padR) / days, bw = slot * .56;
+  const byDay = count(applied.filter(c=>c.applied), c=>c.applied);
+  const ddl = count(C.filter(c=>c.deadline), c=>c.deadline);
+  const evs = count(C.filter(c=>c.nextDate && isApplied(c)), c=>c.nextDate);
+  const maxV = Math.max(TARGET_PER_DAY, ...[...byDay.values()].map(a=>a.length));
+  const y = v => base - v/maxV*(base-top);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="每日投递数">`;
+  s += `<line class="ref" x1="${padL}" x2="${W-padR}" y1="${y(TARGET_PER_DAY)}" y2="${y(TARGET_PER_DAY)}"/>`;
+  s += `<text class="reflbl" x="${W-padR}" y="${y(TARGET_PER_DAY)-5}" text-anchor="end">目标 ${TARGET_PER_DAY} 家/日</text>`;
+  for(let i=0;i<days;i++){
+    const dt = new Date(start.getTime()+i*dayMs);
+    const key = [dt.getFullYear(), String(dt.getMonth()+1).padStart(2,'0'), String(dt.getDate()).padStart(2,'0')].join('-');
+    const x = padL + i*slot + (slot-bw)/2, cx = x + bw/2;
+    const list = byDay.get(key)||[], v = list.length, future = key > AS_OF;
+    if(v>0){ s += `<rect class="col" x="${x}" y="${y(v)}" width="${bw}" height="${base-y(v)}" rx="2"/><text class="val" x="${cx}" y="${y(v)-6}" text-anchor="middle">${v}</text>`; }
+    else if(future){ s += `<rect class="col future" x="${x}" y="${base-8}" width="${bw}" height="8" rx="2"/>`; }
+    if(key===AS_OF){ s += `<line class="today" x1="${cx}" x2="${cx}" y1="${top-10}" y2="${base}" stroke-dasharray="2 3"/><text class="todaylbl" x="${cx}" y="${base+45}" text-anchor="middle">今天</text>`; }
+    const dl = ddl.get(key)||[], ev = evs.get(key)||[];
+    if(dl.length||ev.length){
+      const done = dl.every(c=>isApplied(c)) && !ev.length;
+      s += `<path class="ddl ${done?'done':''}" d="M${cx-5},${base+16} L${cx+5},${base+16} L${cx},${base+8} Z"/>`;
+    }
+    s += `<text x="${cx}" y="${base+30}" text-anchor="middle">${md(key)}</text>`;
+    s += `<rect class="hit" data-k="${key}" x="${padL+i*slot}" y="${top-10}" width="${slot}" height="${base+22-top+10}"/>`;
+  }
+  s += `<line class="axis" x1="${padL}" x2="${W-padR}" y1="${base}" y2="${base}"/></svg>`;
+  $('#rhythm').innerHTML = s;
+  $('#rhythm').querySelectorAll('.hit').forEach(h=>{
+    const k = h.dataset.k, a = byDay.get(k)||[], dl = ddl.get(k)||[], ev = evs.get(k)||[];
+    const lines = [`${md(k)}${k===AS_OF?' · 今天':''}`];
+    if(a.length) lines.push(`投递 ${a.length}：${a.map(c=>c.name).join('、')}`);
+    dl.forEach(c=>lines.push(`截止：${c.name}（${c.status}）`));
+    ev.forEach(c=>lines.push(`${c.next}：${c.name}`));
+    if(lines.length===1) lines.push(k>AS_OF?'（未来）':'无投递');
+    bindTip(h, lines.join('\n'));
+  });
+})();
+
+// ===== 待办 =====
+(function(){
+  const items = [];
+  C.forEach(c=>{
+    if(!isApplied(c) && c.deadline) items.push({date:c.deadline, name:c.name, role:c.role, status:c.status, cls:c.statusCls, what:(isHold(c)?'已停止，可重启':'截止') + (c.next?' · '+c.next:'')});
+    if(isApplied(c) && c.next) items.push({date:c.nextDate, name:c.name, role:c.role, status:'已投递', cls:'s-applied', what:c.next});
+  });
+  agTests.forEach(i=>{                       // 邮件/人工登记的测评、笔试、面试（next-steps + assessments.md）
+    if (items.some(it => it.name === i.company || (i.company||'').includes(it.name) || (it.name||'').includes(i.company))) return;
+    const date = (i.when || i.due || i.start || '').slice(0,10);   // when = agenda 算好的「该做的时间」（有截止用截止），不能用测评生效时间
+    items.push({date, name:i.company, role:'', status:'已投递', cls:'s-applied', what:(i.kind||'测评') + (i.due ? ' · 截止 '+i.due.slice(5,16).replace('T',' ') : ' · 截止未写，尽早做')});
+  });
+  ((D.batch && D.batch.blockers) || []).forEach(b=>{
+    if (items.some(it => it.name === b.name)) return;
+    items.push({date:b.date, name:b.name, role:b.role || '', status:'在跑', cls:'s-form', what:b.what});
+  });
+  items.sort((a,b)=>((a.date||'9999')<(b.date||'9999')?-1:1));
+  if(!items.length){ $('#todo').innerHTML = `<div class="row"><div class="dd">—</div><div class="who"><span>暂无待办</span></div><div class="what"></div></div>`; return; }
+  $('#todo').innerHTML = items.map(it=>{
+    const dl = it.date ? daysLeft(it.date) : null;
+    const cls = dl===null?'':dl<=3?'hot':dl<=7?'warm':'';
+    const dd = dl===null ? '待通知' : dl<0 ? '已过' : `D-${dl}`;
+    const tagCls = it.cls==='s-applied' ? 'blue' : it.cls==='s-hold' ? '' : (cls || 'amber');
+    return `<div class="row"><div class="dd ${cls}">${dd}</div><div class="who"><b>${esc(it.name)}</b> <span>${esc(it.role)}</span><span class="tag ${tagCls}">${esc(it.status)}</span></div><div class="what">${it.date?esc(md(it.date))+' · ':''}${esc(it.what)}</div></div>`;
+  }).join('');
+})();
+
+// ===== 在跑批次 =====
+(function(){
+  const b = D.batch;
+  if(!b || b.missing){ $('#batch').innerHTML = missing('未找到 B-NN.md 批次文件', (b && b.file) || 'log/B-NN.md'); return; }
+  $('#batch-h').innerHTML = `在跑批次 <span class="hint">${esc(b.title || b.file)} · <span class="num">${b.rows.length}</span> 条</span>`;
+  if(!b.rows.length){ $('#batch').innerHTML = missing('批次表为空', b.file); return; }
+  const head = `<tr>${b.headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
+  const body = b.rows.map((r,ri)=>`<tr>${r.map((cell,i)=>{
+    if(i===b.statusCol) return `<td class="st ${esc((b.statusCls||[])[ri] || '')}">${esc(cell)}</td>`;
+    return `<td${cell.length>28?' class="wrapcell"':''}>${esc(cell)}</td>`;
+  }).join('')}</tr>`).join('');
+  $('#batch').innerHTML = `<div class="tbl"><table>${head}${body}</table></div>` + (b.footnote ? `<p class="qmeta">${esc(b.footnote)}</p>` : '');
+})();
+
+// ===== 候选队列 =====
+(function(){
+  const host = $('#pool');
+  if(POOL.missing){ $('#pool-hint').textContent = ''; host.innerHTML = missing('battle-map.md 缺失或无法解析', POOL.file || 'log/battle-map.md'); return; }
+  const F = {}; (POOL.fields||[]).forEach((f,i)=>F[f]=i);
+  const rows = POOL.rows || [];
+  $('#pool-hint').innerHTML = `battle-map.md <span class="num">${rows.length.toLocaleString()}</span> 行 · 勾选后可复制 id`;
+  if(!rows.length){ host.innerHTML = missing('候选队列为空', POOL.file); return; }
+
+  const layers = ['大厂','国企','名企','中小'];
+  const state = { layers:new Set(), mail:'all', ddl:'all', score:'all', q:'', showDone:false, sort:'score', dir:'desc', sel:new Set() };
+
+  host.innerHTML = `
+    <div class="filters">
+      <div class="fg"><span class="fl">层级</span>${layers.map(l=>`<button class="chip" data-layer="${l}">${l}</button>`).join('')}</div>
+      <div class="fg"><span class="fl">邮件类</span>${[['all','全部'],['yes','是'],['no','否']].map(([v,t])=>`<button class="chip${v==='all'?' on':''}" data-mail="${v}">${t}</button>`).join('')}</div>
+      <div class="fg"><span class="fl">截止</span>${[['all','全部'],['has','有截止'],['d7','7 天内']].map(([v,t])=>`<button class="chip${v==='all'?' on':''}" data-ddl="${v}">${t}</button>`).join('')}</div>
+      <div class="fg"><span class="fl">分数</span>${[['all','全部'],['3','≥3'],['6','≥6'],['9','≥9']].map(([v,t])=>`<button class="chip${v==='all'?' on':''}" data-score="${v}">${t}</button>`).join('')}</div>
+      <div class="fg"><input class="fsearch" type="search" id="q" placeholder="搜公司 / 标题 / 命中词" autocomplete="off"></div>
+      <div class="fg"><label class="toggle"><input type="checkbox" class="cbx" id="showdone"> 显示已投</label></div>
+      <div class="fg"><button class="btn" id="copy" disabled>复制已选 id</button><button class="btn" id="clr">清空选择</button></div>
+    </div>
+    <p class="qmeta" id="qmeta"></p>
+    <div id="copybox"></div>
+    <div class="tbl tall"><table id="ptbl"><thead></thead><tbody></tbody></table></div>`;
+
+  const cols = [
+    {k:'sel',   t:'☐',        s:false},
+    {k:'score', t:'score',    s:true,  num:true},
+    {k:'company', t:'公司',   s:true},
+    {k:'title', t:'标题',     s:true},
+    {k:'cat',   t:'层级',     s:true},
+    {k:'kw',    t:'命中关键词', s:true},
+    {k:'exp',   t:'截止',     s:true},
+    {k:'mail',  t:'邮件',     s:true},
+    {k:'board', t:'看板状态', s:true},
+    {k:'id',    t:'id',       s:true,  num:true},
+  ];
+  const thead = host.querySelector('#ptbl thead');
+  const tbody = host.querySelector('#ptbl tbody');
+  thead.innerHTML = `<tr>${cols.map(c=>c.s?`<th class="s" data-k="${c.k}">${c.t} <span class="ar">↕</span></th>`:`<th>${c.t}</th>`).join('')}</tr>`;
+
+  function val(r, k){
+    if(k==='score') return parseFloat(r[F.score]) || 0;
+    if(k==='id') return parseInt(r[F.id],10) || 0;
+    if(k==='exp') return r[F.exp] || '9999-99-99';
+    if(k==='mail') return r[F.mail] ? '0' + r[F.mail] : '1';
+    return String(r[F[k]] == null ? '' : r[F[k]]);
+  }
+  function filtered(){
+    const q = state.q.trim().toLowerCase();
+    return rows.filter(r=>{
+      if(!state.showDone && r[F.done]) return false;
+      if(state.layers.size && !state.layers.has(r[F.cat])) return false;
+      if(state.mail==='yes' && !r[F.mail]) return false;
+      if(state.mail==='no' && r[F.mail]) return false;
+      if(state.ddl==='has' && !r[F.exp]) return false;
+      if(state.ddl==='d7'){ if(!r[F.exp]) return false; const dl = daysLeft(r[F.exp]); if(dl<0 || dl>7) return false; }
+      if(state.score!=='all' && (parseFloat(r[F.score])||0) < parseFloat(state.score)) return false;
+      if(q){
+        const hay = (r[F.company]+' '+r[F.title]+' '+r[F.kw]+' '+r[F.id]).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+  function render(){
+    const list = filtered().slice();
+    const dir = state.dir==='asc' ? 1 : -1;
+    list.sort((a,b)=>{
+      const va = val(a, state.sort), vb = val(b, state.sort);
+      if(va<vb) return -1*dir; if(va>vb) return 1*dir;
+      const ea = a[F.exp]||'9999-99-99', eb = b[F.exp]||'9999-99-99';
+      return ea<eb?-1:ea>eb?1:0;
+    });
+    thead.querySelectorAll('th.s').forEach(th=>{
+      th.classList.toggle('asc', th.dataset.k===state.sort && state.dir==='asc');
+      th.classList.toggle('desc', th.dataset.k===state.sort && state.dir==='desc');
+      const ar = th.querySelector('.ar'); if(ar) ar.textContent = th.dataset.k===state.sort ? (state.dir==='asc'?'↑':'↓') : '↕';
+    });
+    tbody.innerHTML = list.length ? list.map(r=>{
+      const id = r[F.id], done = r[F.done];
+      const exp = r[F.exp];
+      const dl = exp ? daysLeft(exp) : null;
+      const link = r[F.link], apply = r[F.apply];
+      const company = link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(r[F.company])}</a>` : esc(r[F.company]);
+      const mailv = r[F.mail];
+      return `<tr class="${done?'done':''}">`
+        + `<td class="c-sel"><input type="checkbox" class="cbx pick" data-id="${esc(id)}"${state.sel.has(id)?' checked':''}></td>`
+        + `<td class="num c-score" data-l="score">${esc(r[F.score])}</td>`
+        + `<td class="c-company">${company}${done?`<span class="tag">${esc(r[F.done])}</span>`:''}</td>`
+        + `<td class="wrapcell c-title">${esc(r[F.title])}${apply?` <a href="${esc(apply)}" target="_blank" rel="noopener">投递</a>`:''}</td>`
+        + `<td class="c-cat" data-l="层级">${esc(r[F.cat])}</td>`
+        + `<td class="wrapcell c-kw" data-l="命中">${esc(r[F.kw]) || '<span style="color:var(--ink-faint)">—</span>'}</td>`
+        + `<td class="num c-exp ${dlCls(dl)}" data-l="截止">${exp ? esc(md(exp)) + (dl>=0?` <span style="opacity:.7">D-${dl}</span>`:' 已过') : '—'}</td>`
+        + `<td class="mailmark c-mail${mailv?'':' no'}" data-l="邮件">${mailv?esc(mailv):'否'}</td>`
+        + `<td class="c-board" data-l="看板">${esc(r[F.board]||'—')}</td>`
+        + `<td class="num c-id" data-l="id">${esc(id)}</td></tr>`;
+    }).join('') : `<tr class="empty-row"><td colspan="${cols.length}">没有符合条件的行</td></tr>`;
+    const hidden = state.showDone ? 0 : rows.filter(r=>r[F.done]).length;
+    $('#qmeta').textContent = `显示 ${list.length} / ${rows.length} 行` + (hidden?` · 已隐藏 ${hidden} 条已在 tracker 的公司`:'') + ` · 已选 ${state.sel.size}`;
+    $('#copy').disabled = state.sel.size === 0;
+  }
+  host.querySelectorAll('[data-layer]').forEach(b=>b.addEventListener('click', ()=>{
+    const k = b.dataset.layer;
+    if(state.layers.has(k)) state.layers.delete(k); else state.layers.add(k);
+    b.classList.toggle('on', state.layers.has(k)); render();
+  }));
+  [['mail','data-mail'],['ddl','data-ddl'],['score','data-score']].forEach(([key, attr])=>{
+    host.querySelectorAll('['+attr+']').forEach(b=>b.addEventListener('click', ()=>{
+      state[key] = b.getAttribute(attr);
+      host.querySelectorAll('['+attr+']').forEach(x=>x.classList.toggle('on', x===b));
+      render();
+    }));
+  });
+  $('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
+  $('#showdone').addEventListener('change', e=>{ state.showDone = e.target.checked; render(); });
+  thead.addEventListener('click', e=>{
+    const th = e.target.closest('th.s'); if(!th) return;
+    const k = th.dataset.k;
+    if(state.sort===k) state.dir = state.dir==='asc' ? 'desc' : 'asc';
+    else { state.sort = k; state.dir = (k==='score') ? 'desc' : 'asc'; }
+    render();
+  });
+  tbody.addEventListener('change', e=>{
+    const cb = e.target.closest('.pick'); if(!cb) return;
+    const id = cb.dataset.id;
+    if(cb.checked) state.sel.add(id); else state.sel.delete(id);
+    $('#qmeta').textContent = $('#qmeta').textContent.replace(/已选 \d+$/, '已选 ' + state.sel.size);
+    $('#copy').disabled = state.sel.size === 0;
+  });
+  $('#clr').addEventListener('click', ()=>{ state.sel.clear(); $('#copybox').innerHTML=''; render(); });
+  $('#copy').addEventListener('click', ()=>{
+    const text = [...state.sel].join(',');
+    const fallback = () => {
+      $('#copybox').innerHTML = `<div class="copybox"><p>复制失败（非 HTTPS 下剪贴板受限）——全选下面的文本手动复制：</p><textarea id="cbt" readonly></textarea></div>`;
+      const ta = $('#cbt'); ta.value = text; ta.focus(); ta.select();
+    };
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(()=>{
+          $('#copybox').innerHTML = `<div class="copybox"><p>已复制 ${state.sel.size} 个 id 到剪贴板。</p></div>`;
+        }).catch(fallback);
+      } else fallback();
+    } catch(err){ fallback(); }
+  });
+  render();
+})();
+
+// ===== 邮件队列 =====
+(function(){
+  const e = D.email;
+  if(!e || e.missing){ $('#email').innerHTML = missing('未找到 email-queue.md', (e && e.file) || 'log/email-queue.md'); return; }
+  if(!e.rows.length){ $('#email').innerHTML = `<div class="missing">队列为空 · <code>${esc(e.file)}</code></div>`; return; }
+  const head = `<tr>${e.headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
+  const body = e.rows.map(r=>`<tr>${r.map(c=>`<td${c.length>28?' class="wrapcell"':''}>${esc(c)}</td>`).join('')}</tr>`).join('');
+  $('#email').innerHTML = `<div class="tbl"><table>${head}${body}</table></div>`;
+})();
+
+// ===== 横条：层级 / 城市 =====
+function bars(el, groups, mutedKey){
+  if(!groups.length){ el.innerHTML = missing('无数据'); return; }
+  const max = Math.max(1, ...groups.map(g=>g[1].length));
+  el.innerHTML = groups.map(([k,list])=>`<div class="bar-row ${k===mutedKey?'muted':''}" data-k="${esc(k)}"><div class="lbl">${esc(k)}</div><div class="track"><div class="bar" style="width:${Math.max(4, list.length/max*100)}%"></div><span class="n">${list.length}</span></div></div>`).join('');
+  el.querySelectorAll('.bar-row').forEach(r=>{ const g = groups.find(g=>g[0]===r.dataset.k); if(g) bindTip(r, `${g[0]} ${g[1].length}\n${g[1].map(c=>c.name).join('、')}`); });
+}
+$('#layer-hint').innerHTML = `<span class="num">${C.length}</span> 家`;
+const layerOrder = ['大厂','国企','中小','名企'];
+bars($('#layers'), layerOrder.map(k=>[k, C.filter(c=>c.layer===k)]).filter(g=>g[1].length));
+const cityMap = count(C, c=>c.city||'未标');
+const cityGroups = [...cityMap.entries()].filter(([k])=>k!=='未标').sort((a,b)=>b[1].length-a[1].length);
+const big = cityGroups.filter(g=>g[1].length>1), rest = cityGroups.filter(g=>g[1].length===1);
+const cityFinal = big.concat(rest.length?[['其他', rest.flatMap(g=>g[1])]]:[]).concat(cityMap.get('未标')?[['未标', cityMap.get('未标')]]:[]);
+bars($('#cities'), cityFinal, '未标');
+
+// ===== 门户 =====
+const portalGroups = [...count(C, c=>c.portal||'—').entries()].sort((a,b)=>b[1].length-a[1].length);
+$('#portals').innerHTML = portalGroups.map(([k,l])=>`<span class="portal" data-k="${esc(k)}">${esc(k)}<span class="n">${l.length}</span></span>`).join('');
+$('#portals').querySelectorAll('.portal').forEach(p=>{ const g = portalGroups.find(g=>g[0]===p.dataset.k); if(g) bindTip(p, g[1].map(c=>c.name).join('、')); });
+
+// ===== 已投明细 =====
+(function(){
+  $('#detail-summary').textContent = `全部 ${C.length} 家明细（tracker.md 原表 + 派生列）`;
+  if(!C.length){ $('#tbl').innerHTML = ''; $('#detail-summary').insertAdjacentHTML('afterend', missing('tracker.md 缺失或无数据表', D.trackerFile||'tracker.md')); return; }
+  const head = `<tr><th>公司</th><th>id</th><th>层级</th><th>岗位</th><th>城市</th><th>门户</th><th>状态</th><th>投递日</th><th>截止</th><th>下一步</th><th>记录</th></tr>`;
+  $('#tbl').innerHTML = head + C.map(c=>{
+    const dl = c.deadline ? daysLeft(c.deadline) : null;
+    const recs = (c.records||[]).length
+      ? c.records.map(r=>`<a href="${esc(r.href)}">${esc(r.text)}</a>`).join(' ')
+      : '<span style="color:var(--ink-faint)">—</span>';
+    return `<tr><td>${esc(c.name)}</td><td class="num">${esc(c.id)}</td><td>${esc(c.layer)}</td><td class="wrapcell">${esc(c.role)}</td><td>${esc(c.city||'—')}</td><td>${esc(c.portal)}</td>`
+      + `<td class="st ${esc(c.statusCls)}">${esc(c.status)}</td><td class="num">${c.applied?esc(md(c.applied)):'—'}</td>`
+      + `<td class="num ${dlCls(dl)}">${c.deadline?esc(md(c.deadline)):'—'}</td><td class="wrapcell">${esc(c.next||'')}</td><td class="wrapcell">${recs}</td></tr>`;
+  }).join('');
+})();
+
+// ===== 页脚 =====
+$('#foot').innerHTML = `<span>真源：${(D.sources||[]).map(s=>`<span class="num">${esc(s.path)}</span>${s.ok?'':'（缺失）'}`).join(' · ')}</span>`
+  + `<span>数据更新于 <span class="num">${esc(D.generatedAt||'')}</span> · campus-apply web</span>`;
+if (D.openHandoffs) $('#hcnt').textContent = D.openHandoffs;
+})();
+</script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));</script>
